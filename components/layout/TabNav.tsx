@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { VIEWS } from './views';
 
-export function TabNav() {
+export function TabNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
+  const views = isAdmin ? [{ key: 'admin', label: 'Admin', href: '/admin' }, ...VIEWS] : VIEWS;
 
   return (
     <nav className="mb-6 flex flex-wrap gap-0.5 border-b-2 border-line">
-      {VIEWS.map((view) => {
+      {views.map((view) => {
         const active = pathname === view.href;
         return (
           <Link
