@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Race } from '@/lib/race/sample-race';
 import { positionAt } from '@/lib/race/replay-position';
+import { standingsAt } from '@/lib/race/standings';
+import { ReplayLeaderboard } from './ReplayLeaderboard';
 
 // A simple, forever-looping race replay: one number-marker per kart sweeps the
 // track path at a pace set by its lap times. The time→fraction math is pure
@@ -16,12 +18,21 @@ const PALETTE = ['fill-hot', 'fill-cool', 'fill-good', 'fill-warn', 'fill-paint'
 // a ~2-hour race loops in a watchable ~3 minutes.
 const SPEED = 45;
 
+// The on-track markers move every RAF frame, but the timing tower only needs to
+// refresh a few times a second — throttle its React state so we don't re-render
+// the whole field 60×/s.
+const TOWER_REFRESH_MS = 200;
+
 // viewBox framed around the TRACK_PATH bounds (x≈342..557, y≈54..366) with padding.
 const VIEW_BOX = '310 30 280 360';
 
 export function LandingReplay({ race }: { race: Race }) {
   const pathRef = useRef<SVGPathElement | null>(null);
   const markerRefs = useRef<(SVGGElement | null)[]>([]);
+
+  // Elapsed race time (seconds), updated at TOWER_REFRESH_MS to drive the tower.
+  const [elapsed, setElapsed] = useState(0);
+  const standings = useMemo(() => standingsAt(race.teams, elapsed), [race.teams, elapsed]);
 
   useEffect(() => {
     const pathEl = pathRef.current;
@@ -44,15 +55,23 @@ export function LandingReplay({ race }: { race: Race }) {
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduceMotion) {
+      // elapsed already initialises to 0, so the tower renders its starting grid.
       place(0);
       return;
     }
 
     let raf = 0;
     let start: number | null = null;
+    let lastEmit = 0;
     const tick = (now: number) => {
       if (start === null) start = now;
-      place(((now - start) / 1000) * SPEED);
+      const raceTime = ((now - start) / 1000) * SPEED;
+      place(raceTime);
+      // Refresh the timing tower a few times a second, not every frame.
+      if (now - lastEmit >= TOWER_REFRESH_MS) {
+        lastEmit = now;
+        setElapsed(raceTime);
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -61,7 +80,10 @@ export function LandingReplay({ race }: { race: Race }) {
   }, [race]);
 
   return (
-    <div className="rounded-lg border border-line bg-asphalt-2 p-4">
+    <div className="relative rounded-lg border border-line bg-asphalt-2 p-4">
+      <div className="pointer-events-none absolute left-3 top-3 z-10">
+        <ReplayLeaderboard standings={standings} />
+      </div>
       <svg
         viewBox={VIEW_BOX}
         role="img"
