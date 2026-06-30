@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
 import { requireRole } from '@/lib/auth/rbac';
-import { getUserById } from '@/lib/db/queries';
+import { getDriverProfile, getUserById } from '@/lib/db/queries';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ProfileForm } from '@/components/driver/ProfileForm';
+import { IdentityEditor } from '@/components/driver/IdentityEditor';
+import { DEFAULT_VISIBILITY, type DriverProfile } from '@/lib/entities/types';
 
 export default async function DriverPage() {
   const session = await requireRole('Driver');
@@ -12,20 +13,22 @@ export default async function DriverPage() {
   const user = await getUserById(session.user.id);
   if (!user) notFound();
 
-  const membership = session.user.memberships.find((m) => m.role === 'Driver');
+  // Their saved identity, or a sensible default seeded from the account name.
+  const profile: DriverProfile = (await getDriverProfile(session.user.id)) ?? {
+    id: session.user.id,
+    userId: session.user.id,
+    displayMode: 'alias',
+    fullName: user.name ?? undefined,
+    visibility: { ...DEFAULT_VISIBILITY },
+  };
 
   return (
     <div className="flex flex-col gap-5">
-      <Card title="Your profile">
-        <ProfileForm name={user.name ?? ''} />
-        <p className="mt-3 text-[12px] text-dim">
-          {membership?.teamId
-            ? 'Assigned to a team for the current event.'
-            : 'No team assignment yet.'}
-        </p>
+      <Card title="Your race identity">
+        <IdentityEditor initial={profile} />
       </Card>
       <Card title="Personal metrics">
-        <EmptyState message="Your pace, consistency and anonymized rank vs the field become available once results are published (analytics engine slice)." />
+        <EmptyState message="Your pace, consistency and anonymized rank vs the field appear here once your team's results are published." />
       </Card>
     </div>
   );

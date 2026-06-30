@@ -251,3 +251,8 @@ create table if not exists driver_profiles (
 -- Link the per-race `teams` rows to the persistent identities (additive, nullable).
 alter table teams add column if not exists team_profile_id   uuid references team_profiles (id);
 alter table teams add column if not exists driver_profile_id uuid references driver_profiles (id);
+
+-- One profile per user, for `on conflict (user_id)` upserts. Non-partial: Postgres
+-- treats NULLs as distinct, so unclaimed profiles (user_id null) are unconstrained
+-- while each user keeps a single editable identity.
+create unique index if not exists driver_profiles_user_uq on driver_profiles (user_id);
