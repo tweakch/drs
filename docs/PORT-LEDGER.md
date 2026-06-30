@@ -68,12 +68,12 @@ _Updated each wave. See `prompts/canvas/` for the REASONS Canvas behind each vie
 
 ### Detektiv (6)
 
-- ⬜ X1 — confidence meter
-- ⬜ X2 — kart pool display
-- ⬜ X3 — stint grid (team × stint)
-- ⬜ X4 — candidate-set display
-- ⬜ X5 — fact dropdown (constraint entry)
-- ⬜ X6 — constraint solver
+- ✅ X1 — confidence meter
+- ✅ X2 — kart pool display
+- ✅ X3 — stint grid (team × stint)
+- ✅ X4 — candidate-set display
+- ✅ X5 — fact dropdown (constraint entry)
+- ✅ X6 — constraint solver
 
 ### Replay (9)
 
@@ -105,4 +105,4 @@ _Updated each wave. See `prompts/canvas/` for the REASONS Canvas behind each vie
 
 ## Tally
 
-- Landed: **42 / 60** (70 %)
+- Landed: **48 / 60** (80 %) — 🎯 goal reached (Waves 1–3)
