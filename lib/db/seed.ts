@@ -33,9 +33,10 @@ async function seed(): Promise<void> {
   try {
     for (const file of files) {
       const sql = readFileSync(join(sqlDir, file), 'utf8');
-      // One simple-query batch on a single connection → atomic per file. An error
-      // anywhere aborts and rolls the whole file back; idempotency makes retries safe.
-      await pool.query(`begin;\n${sql}\ncommit;`);
+      // Apply as a single multi-statement query, exactly like lib/db/migrate.ts (a
+      // proven path through the Neon driver). Every statement is an idempotent upsert,
+      // so a re-run completes/repairs any partial application safely.
+      await pool.query(sql);
       console.log(`[DRS] applied ${file}`);
     }
 
