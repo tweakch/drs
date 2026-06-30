@@ -5,12 +5,20 @@ import type { NextAuthConfig } from 'next-auth';
 import Resend from 'next-auth/providers/resend';
 
 export default {
-  providers: [
-    Resend({
-      apiKey: process.env.AUTH_RESEND_KEY,
-      from: process.env.AUTH_EMAIL_FROM ?? 'onboarding@resend.dev',
-    }),
-  ],
+  // The Resend provider is an *email* provider, which Auth.js requires to be
+  // paired with an adapter. The adapter is Node-only and lives in auth.ts, so we
+  // must NOT initialise the provider in the Edge middleware runtime — doing so
+  // throws `MissingAdapter` on every middleware invocation. Middleware only needs
+  // the session cookie + `authorized` callback to gate routes, not the provider.
+  providers:
+    process.env.NEXT_RUNTIME === 'nodejs'
+      ? [
+          Resend({
+            apiKey: process.env.AUTH_RESEND_KEY,
+            from: process.env.AUTH_EMAIL_FROM ?? 'onboarding@resend.dev',
+          }),
+        ]
+      : [],
   pages: {
     signIn: '/signin',
     verifyRequest: '/verify-request',
