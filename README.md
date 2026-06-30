@@ -26,7 +26,7 @@ Architecture decisions are recorded in [`docs/adr/`](./docs/adr/).
 | Framework       | Next.js (App Router) + TypeScript — _DRS-0002_         |
 | Styling         | Tailwind CSS (design tokens ported from the prototype) |
 | Hosting         | Vercel (trunk-based, preview deploy per PR)            |
-| Database        | Vercel Postgres (race / team / lap)                    |
+| Database        | Neon Postgres via Vercel Marketplace (race/team/lap)   |
 | Large payloads  | Vercel Blob (raw timing dumps, exports)                |
 | Package manager | pnpm (via Corepack), Node 22 LTS                       |
 
@@ -92,9 +92,10 @@ workflow in this repo). See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the full 
 
 1. Create a Vercel project and link it to this repository (Vercel dashboard → Add New →
    Project → import the Git repo). Vercel auto-detects `vercel.json`.
-2. Add a Vercel Postgres store and a Blob store; "connect" them to the project so the
-   `POSTGRES_*` and `BLOB_READ_WRITE_TOKEN` env vars are populated for
-   Development / Preview / Production. See [`.env.example`](./.env.example) for the names.
+2. Add a **Neon Postgres** store (Vercel Marketplace) and a **Vercel Blob** store, and
+   connect them to the project so `DATABASE_URL` / `DATABASE_URL_UNPOOLED` and
+   `BLOB_READ_WRITE_TOKEN` are populated for Development / Preview / Production. See
+   [`.env.example`](./.env.example) for the names.
 3. Protect `main` (GitHub → Settings → Branches): require the CI checks to pass before
    merge. (Code-owner review is optional today — see `.github/CODEOWNERS`.)
 

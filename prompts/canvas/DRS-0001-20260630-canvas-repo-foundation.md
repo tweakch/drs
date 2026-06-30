@@ -154,8 +154,8 @@ docs/adr/README.md               ← index of ADRs
 vercel.json                      ← framework: nextjs, region, installCommand,
                                    buildCommand (placeholders resolve once DRS-0002 lands)
 .vercelignore                    ← prompts/, docs/, wohlen-race-analysis.html, *.md drafts
-.env.example                     ← POSTGRES_URL / POSTGRES_* , BLOB_READ_WRITE_TOKEN
-                                   (names + one-line purpose; NO values)
+.env.example                     ← DATABASE_URL / DATABASE_URL_UNPOOLED (Neon),
+                                   BLOB_READ_WRITE_TOKEN (names + purpose; NO values)
 ```
 
 **Dependencies added (dev only):** `prettier`, `husky`, `lint-staged`,
@@ -247,3 +247,6 @@ Inherits [`../shared/safeguards.md`](../shared/safeguards.md). Slice-specific:
   with a "pending DRS-0002" notice; `node_modules`/`.env`/`.vercel` git-ignored.
   Deferred to operator (no local verification possible): GitHub Actions run on a PR,
   Vercel project linking, and branch protection — documented in README/CONTRIBUTING.
+- 2026-06-30 — sync (from the DRS-0002 review): env contract switched to **Neon**
+  (`DATABASE_URL` / `DATABASE_URL_UNPOOLED`) because `@vercel/postgres` is deprecated;
+  `.env.example` and README updated accordingly. See ADR-0003.

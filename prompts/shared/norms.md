@@ -46,8 +46,9 @@ types/          shared TypeScript types (mirror shared/entities.md)
 
 ## Styling
 
-- **Tailwind CSS**. Port the prototype's design tokens into `tailwind.config` /
-  CSS variables (asphalt/paint/hot/cool/warn/good palette, the racing-paper feel).
+- **Tailwind CSS v4** (CSS-first). Define the prototype's design tokens in `globals.css`
+  under `@theme {}` (asphalt/paint/hot/cool/warn/good palette, the racing-paper feel);
+  v4 emits the CSS variables and the utilities from there — no `tailwind.config.ts`.
 - No inline `style=` except for truly dynamic values (chart colours, computed bars).
 - Dark, high-contrast, data-dense aesthetic is intentional — preserve it.
 

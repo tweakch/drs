@@ -2,7 +2,7 @@
 id: DRS-0002
 slice: app-scaffold
 type: canvas
-status: draft
+status: approved
 created: 2026-06-30
 updated: 2026-06-30
 source_story: ../stories/DRS-0002-app-scaffold.story.md
@@ -64,9 +64,12 @@ especially the pure `lib/analytics/` isolation — while deferring all feature b
 Key decisions (from analysis):
 
 - **App Router** (per DRS-0001 ADR-0002).
-- **Tokens twice**: CSS variables in `globals.css` _and_ mapped into the Tailwind theme.
+- **Tokens once (Tailwind v4)**: define the prototype palette/fonts/background in
+  `globals.css` under `@theme {}`; v4 emits both the CSS variables _and_ the utilities
+  (`bg-asphalt`, `text-hot`) from that single source. No `tailwind.config.ts`.
 - **Engine: signatures + types only**; the two pure formatters copied in full.
-- **DB: typed SQL** via `@vercel/postgres` + SQL migrations; no ORM yet.
+- **DB: typed SQL on Neon** via `@neondatabase/serverless` (Vercel Marketplace native
+  integration) + SQL migrations; no ORM yet. (`@vercel/postgres` is deprecated — ADR-0003.)
 - **Nine views as a route group** under a shared layout that renders the tab nav.
 - **Env validated with zod** (`lib/env.ts`) now that there's an app to consume it.
 - All DB/Blob code **env-gated** so build/CI never need a live database.
@@ -101,15 +104,19 @@ and **extends** `package.json`):
 # --- app tooling (extends DRS-0001 foundation) ---
 tsconfig.json                     ← strict
 next.config.ts
-eslint.config.mjs                 ← extends next/core-web-vitals (+ DRS-0001 base)
+eslint.config.mjs                 ← flat config: next/core-web-vitals + typescript-eslint
+                                    + eslint-config-prettier (LAST, disables format rules)
 vitest.config.ts                  ← + @vitejs/plugin-react
-postcss.config.mjs, tailwind.config.ts
+postcss.config.mjs                ← { plugins: { "@tailwindcss/postcss": {} } }  (v4)
 package.json                      ← (EXTEND) add app deps; REPLACE placeholder
-                                    lint/typecheck/test scripts with real commands
+                                    lint/typecheck/test scripts; EXTEND lint-staged
+                                    ("*.{ts,tsx}": "eslint --fix")
 
 app/
-  layout.tsx                      ← root layout, fonts, globals
-  globals.css                     ← design tokens (CSS variables) + base
+  layout.tsx                      ← root layout, system font stacks (no next/font), globals
+  globals.css                     ← @import "tailwindcss"; @theme { design tokens } + base
+  error.tsx                       ← root error boundary (per norms.md)
+  not-found.tsx                   ← root 404 (per norms.md)
   (app)/
     layout.tsx                    ← app shell: header + <TabNav/>
     page.tsx                      ← redirect to /data
@@ -136,9 +143,9 @@ lib/
     engine.ts                     ← stubbed signatures (throw "not implemented")
     format.test.ts                ← smoke + formatter unit tests
   db/
-    client.ts                     ← typed @vercel/postgres wrapper (env-gated)
+    client.ts                     ← typed Neon (@neondatabase/serverless) wrapper (env-gated)
     schema.sql                    ← races/teams/laps DDL
-    migrate.ts                    ← runs schema.sql
+    migrate.ts                    ← runs schema.sql (uses the unpooled connection)
   blob/
     client.ts                     ← @vercel/blob helpers (env-gated)
 
@@ -146,30 +153,36 @@ types/
   index.ts                        ← Race/Track/Team/Lap/Stint/Driver/Kart (mirror entities)
 ```
 
-**Dependencies added:** `next`, `react`, `react-dom`, `tailwindcss`, `postcss`,
-`autoprefixer`, `@vercel/postgres`, `@vercel/blob`, `zod`, `chart.js`
-(+ `react-chartjs-2` when the first chart view lands); dev: `typescript`, `vitest`,
-`@vitejs/plugin-react`, `eslint-config-next`, `@types/*`. (Prettier/Husky/commitlint
-already provided by DRS-0001.)
+**Dependencies added:** `next`, `react`, `react-dom`, `tailwindcss`,
+`@tailwindcss/postcss`, `postcss`, `@neondatabase/serverless`, `@vercel/blob`, `zod`,
+`chart.js` (+ `react-chartjs-2` when the first chart view lands); dev: `typescript`,
+`vitest`, `@vitejs/plugin-react`, `eslint`, `eslint-config-next`, `typescript-eslint`,
+`eslint-config-prettier`, `@types/*`. (Prettier/Husky/commitlint already provided by
+DRS-0001; no `tailwind.config.ts` or `autoprefixer` — Tailwind v4 is CSS-first.)
 
 **Integration points:** consumes DRS-0001's `vercel.json`, `.vercelignore`, env contract,
-CI workflow, and root `package.json`. Env vars (`POSTGRES_URL`/`POSTGRES_*`,
+CI workflow, and root `package.json`. Env vars (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`,
 `BLOB_READ_WRITE_TOKEN`) validated by `lib/env.ts`. No UI consumes DB/Blob this slice.
 
 ---
 
 ## O — Operations
 
-1. **App tooling.** Init Next.js App Router + TS (strict): `tsconfig`, `next.config`,
-   Tailwind/PostCSS, Next ESLint, Vitest + React plugin. Extend the DRS-0001
-   `package.json` with app deps and **replace** the placeholder `lint`/`typecheck`/`test`
-   scripts with real commands (`eslint`, `tsc --noEmit`, `vitest run`).
-   - _Acceptance:_ `pnpm dev` serves a page; `pnpm lint`, `pnpm typecheck`, `pnpm test`
-     run for real; the DRS-0001 "pending" echoes are gone.
-2. **Port design tokens.** Add the prototype's palette + fonts + racing-paper background
-   to `globals.css` as CSS variables; map them in the Tailwind theme.
-   - _Acceptance:_ `bg-asphalt`/`text-hot`/etc. resolve; body shows the dark racing-paper
-     background; values match the prototype `:root` / `shared/entities.md`.
+1. **App tooling.** Init Next.js (App Router) + TS (strict): `tsconfig`, `next.config`,
+   Tailwind v4 via `@tailwindcss/postcss` (`postcss.config.mjs`), ESLint flat config
+   (`next/core-web-vitals` + `typescript-eslint` + `eslint-config-prettier` LAST),
+   Vitest + React plugin. Extend the DRS-0001 `package.json` with app deps, **replace**
+   the placeholder `lint`/`typecheck`/`test` scripts with real commands (`next lint` /
+   `eslint`, `tsc --noEmit`, `vitest run`), and **extend `lint-staged`** with
+   `"*.{ts,tsx}": "eslint --fix"`.
+   - _Acceptance:_ `pnpm dev` serves a page; `pnpm lint`/`typecheck`/`test` run for real;
+     DRS-0001 "pending" echoes gone; ESLint and Prettier do not conflict; a staged `.ts`
+     file is eslint-fixed on commit.
+2. **Port design tokens (Tailwind v4).** In `globals.css`: `@import "tailwindcss"` then a
+   `@theme {}` block carrying the prototype palette, font stacks, and racing-paper
+   background — v4 generates the CSS variables and the utilities from this one source.
+   - _Acceptance:_ `bg-asphalt`/`text-hot`/etc. resolve; their CSS variables exist; body
+     shows the dark racing-paper background; values match the prototype `:root`.
 3. **Build the app shell.** `(app)/layout.tsx` renders `Header` (eyebrow + title) and
    `TabNav` (nine views, active-route highlight); `(app)/page.tsx` redirects to `/data`.
    - _Acceptance:_ nav shows nine tabs; routing works; active tab highlighted; visual
@@ -187,16 +200,19 @@ CI workflow, and root `package.json`. Env vars (`POSTGRES_URL`/`POSTGRES_*`,
    - _Acceptance:_ `format.test.ts` passes (e.g. `FMT(62.8)==="1:02.800"`,
      `FMT(53.4)==="53.400"`); importing `lib/analytics` pulls in no React.
 7. **Data layer (env-gated) + env validation.** `lib/db/schema.sql` (races/teams/laps
-   DDL), `migrate.ts`, typed `client.ts`; `lib/blob/client.ts`; `lib/env.ts` validates
-   the DRS-0001 env contract with zod. All read env lazily and fail with a clear error if
-   unset; nothing in the UI imports them yet.
+   DDL), `migrate.ts` (uses the unpooled connection), typed `client.ts` over
+   `@neondatabase/serverless`; `lib/blob/client.ts` (`@vercel/blob`); `lib/env.ts`
+   validates the env contract (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`,
+   `BLOB_READ_WRITE_TOKEN`) with zod. All read env lazily and fail clearly if unset;
+   nothing in the UI imports them yet.
    - _Acceptance:_ build & CI pass with **no** DB env present; `pnpm migrate` applies
      schema when env is set; missing/invalid env yields a clear `lib/env.ts` error.
 8. **CI real + first deploy.** Confirm CI (now running real lint/type/test) is green;
    ensure DRS-0001's `vercel.json` install/build resolve for the real app; verify the
    first Vercel **preview** deploy renders the shell.
-   - _Acceptance:_ CI green on a clean checkout; preview deploys with only env vars set;
-     shell renders on the preview URL; `main` promotes to production.
+   - _Acceptance:_ CI green on a clean checkout; the first PR **preview** deploy renders
+     the shell on its URL. (Production promotion on merge to `main` is verified post-merge
+     by the operator — it cannot be checked within the slice.)
 
 ---
 
@@ -205,6 +221,11 @@ CI workflow, and root `package.json`. Env vars (`POSTGRES_URL`/`POSTGRES_*`,
 Inherits [`../shared/norms.md`](../shared/norms.md). Slice-specific:
 
 - Realises the `norms.md` project structure (`app/`, `lib/`, `types/`, `components/`).
+- Target versions: **Next.js 15** (App Router) + **React 19**, **Tailwind CSS v4**.
+- Tailwind config is **CSS-first** (`@theme` in `globals.css`); do **not** add a
+  `tailwind.config.ts`.
+- ESLint and Prettier must not overlap: `eslint-config-prettier` last in the flat config;
+  Prettier owns formatting, ESLint owns code-quality rules.
 - `lib/analytics/engine.ts` stubs must still satisfy `strict` typing (typed signatures,
   bodies throw).
 - Keep `lib/analytics/` free of React/DOM/Next imports (the purity boundary).
@@ -227,3 +248,14 @@ Inherits [`../shared/safeguards.md`](../shared/safeguards.md). Slice-specific:
 - 2026-06-30 — repurposed from the original "foundation & scaffold" canvas after the
   split; foundation concerns removed (now DRS-0001). Scope = Next.js app scaffold only.
   Status `draft` — pending its own clarify + canvas-review gates.
+- 2026-06-30 — `spdd-prompt-update` after canvas review (findings verified against current
+  docs): **F1** `@vercel/postgres` is deprecated → switch to **Neon**
+  (`@neondatabase/serverless`) via the Vercel Marketplace; env contract → `DATABASE_URL` /
+  `DATABASE_URL_UNPOOLED` (cascaded to ADR-0003 and DRS-0001 `.env.example`). **F2**
+  Tailwind **v4** is CSS-first → drop `tailwind.config.ts`/`autoprefixer`, use
+  `@tailwindcss/postcss` + `@theme` (tokens defined once). Also: extend `lint-staged` with
+  `eslint --fix`; add `eslint-config-prettier`; add root `error.tsx`/`not-found.tsx`;
+  pin target versions (Next 15 / React 19 / Tailwind v4); soften O8 production-promotion
+  acceptance to a post-merge operator check. Status remains `draft`.
+- 2026-06-30 — **approved** at the human review gate (post prompt-update); ready for
+  `spdd-generate`.

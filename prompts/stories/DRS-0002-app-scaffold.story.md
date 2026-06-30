@@ -73,7 +73,11 @@ only the shell and the module boundaries.
 
 ## Open questions (resolve at clarify gate)
 
-- Tokens as CSS variables + Tailwind theme (both), or Tailwind theme only?
 - Chart lib now (`chart.js` + `react-chartjs-2`) or defer to the first charting view?
-- Typed SQL (`@vercel/postgres`) vs. adding an ORM (e.g. Drizzle) — analysis leaned
-  typed SQL; revisit here.
+
+### Resolved at canvas review (2026-06-30)
+
+- **Design tokens** → defined once in `globals.css` `@theme {}` (Tailwind v4 is
+  CSS-first; the earlier "CSS vars + Tailwind theme" duplication no longer applies).
+- **DB driver** → typed SQL on **Neon** (`@neondatabase/serverless`), no ORM
+  (`@vercel/postgres` is deprecated). See ADR-0003.

@@ -54,12 +54,12 @@ Source of truth: `../../wohlen-race-analysis.html`.
 ## Key decisions & trade-offs
 
 1. **App Router** (RSC, Vercel-native) — confirmed in DRS-0001 ADR-0002.
-2. **Tokens twice**: CSS variables in `globals.css` (faithful, runtime-themable) **and**
-   mapped into the Tailwind theme so `bg-asphalt`/`text-hot` resolve. Avoids duplicating
-   hex codes. _(Open question in the story: theme-only is the alternative.)_
+2. **Tokens once (Tailwind v4, CSS-first)**: define tokens in `globals.css` under
+   `@theme {}`; v4 emits both the CSS variables and the utilities (`bg-asphalt`/`text-hot`)
+   from that single source — no `tailwind.config.ts`, no duplication.
 3. **Engine: signatures + types only** now; the two pure formatters copied in full.
-4. **DB: typed SQL** via `@vercel/postgres` + SQL migrations; no ORM yet (revisit —
-   story open question).
+4. **DB: typed SQL on Neon** via `@neondatabase/serverless` (Vercel Marketplace
+   integration) + SQL migrations; no ORM yet. (`@vercel/postgres` is deprecated — ADR-0003.)
 5. **Nine views as a route group** under a shared layout hosting the tab nav; each view
    its own URL (mirrors the prototype's tab model).
 6. **Env validation**: implement the zod schema now (the orphan-code concern from
@@ -72,8 +72,9 @@ Source of truth: `../../wohlen-race-analysis.html`.
 
 - **Token fidelity** — the dense dark aesthetic is part of the product; port variables
   verbatim and visually check against the prototype.
-- **Edge vs Node runtime** for DB/Blob — `@vercel/postgres` prefers Node; pin Node
-  runtime on DB route handlers; keep `lib/analytics` runtime-neutral.
+- **Edge vs Node runtime** for DB/Blob — `@neondatabase/serverless` works on both Edge
+  and Node (HTTP/WebSocket); pin the runtime per route handler as needed and keep
+  `lib/analytics` runtime-neutral.
 - **First real preview deploy** — `vercel.json` build/install from DRS-0001 must resolve
   for the real app; verify on the preview URL.
 - **Scope creep** into a feature view — acceptance criteria forbid it.

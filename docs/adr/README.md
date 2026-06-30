@@ -17,6 +17,6 @@ slice.
 | -------------------------------------------------- | ------------------------------------------ | -------- |
 | [0001](./0001-adopt-spdd.md)                       | Adopt Structured-Prompt-Driven Dev         | Accepted |
 | [0002](./0002-tech-stack-nextjs-vercel.md)         | Tech stack: Next.js + TypeScript on Vercel | Accepted |
-| [0003](./0003-persistence-vercel-postgres-blob.md) | Persistence: Vercel Postgres + Blob        | Accepted |
+| [0003](./0003-persistence-vercel-postgres-blob.md) | Persistence: Neon Postgres + Vercel Blob   | Accepted |
 | [0004](./0004-trunk-based-with-vercel-previews.md) | Trunk-based dev with Vercel previews       | Accepted |
 | [0005](./0005-node-pnpm-policy.md)                 | Node & pnpm version policy                 | Accepted |
