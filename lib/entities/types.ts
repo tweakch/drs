@@ -26,6 +26,8 @@ export interface Track {
   shape: ShapeStatus;
   /** SVG path `d` for the replay/atlas silhouette, when traced. */
   layout?: string;
+  /** viewBox framing `layout` (each traced track has its own coordinate space). */
+  layoutViewBox?: string;
 }
 
 // ---- Team -----------------------------------------------------------------

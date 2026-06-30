@@ -55,8 +55,9 @@ export default function CircuitsPage() {
       </div>
 
       <p className="text-[12px] text-dim">
-        Only Wohlen is traced so far. Every ghost outline is an open invitation — trace a circuit
-        from its OpenStreetMap way and it lights up across the app.
+        {stats.traced} of {stats.tracks} circuits traced so far — Wohlen and Lyss, projected from
+        their OpenStreetMap ways. Every ghost outline is an open invitation: trace a circuit and it
+        lights up across the app.
       </p>
     </div>
   );
