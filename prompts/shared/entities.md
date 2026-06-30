@@ -169,3 +169,95 @@ Nine read/edit surfaces from the prototype, each a future slice:
 | Kart     | Recovered kart pace ratings (the hidden effect).                   |
 | Detektiv | Kart-identity puzzle: infer which kart is which from pace.         |
 | Replay   | Animated SVG track playback: positions, clock, order, speed/seek.  |
+
+---
+
+## Identity & access (auth)
+
+Added when authentication was introduced (DRS-0003+). Auth is **invite-only and
+hierarchical**, sessions are **DB-backed** (Auth.js + Neon adapter, passwordless magic
+link), and all data is **event-scoped**. These entities sit alongside the race-domain
+entities above; the bridge between an auth principal and the race domain is `Membership`.
+
+### User
+
+An authenticated person (one human, one login).
+
+| Field           | Type      | Notes                                              |
+| --------------- | --------- | -------------------------------------------------- |
+| id              | uuid      |                                                    |
+| email           | string    | unique; the magic-link target. Low-sensitivity PII |
+| name            | string?   | display name                                       |
+| isPlatformAdmin | bool      | global Admin flag (see Role); rare, guarded        |
+| createdAt       | timestamp |                                                    |
+
+Auth.js also owns its adapter tables (`accounts`, `sessions`, `verification_tokens`) —
+infrastructure, not domain.
+
+### Role
+
+The capability tier a user holds **within a scope**. Not a column on User (except the
+global admin flag) — it lives on `Membership`.
+
+`Admin` · `Director` · `Team` · `Driver` — see each role's story for capabilities.
+
+### Event
+
+The tenant boundary. A timed competition a Director runs; owns one or more `Race`s
+(the prototype's single race becomes one Event with one Race). Teams and Drivers are
+scoped to the Events they participate in.
+
+| Field   | Type   | Notes                                       |
+| ------- | ------ | ------------------------------------------- |
+| id      | uuid   |                                             |
+| name    | string | e.g. "Wohlen 2h GP 2026"                    |
+| ownerId | uuid   | the Director (User) who owns it             |
+| date    | date   |                                             |
+| status  | enum   | `draft` · `live` · `published` · `archived` |
+| races   | Race[] | the timed sessions within the event         |
+
+### Membership
+
+The bridge: **who** can do **what**, **where**. One row per (user × event × role),
+optionally pinned to a specific domain `Team` or `Driver`.
+
+| Field     | Type      | Notes                                                       |
+| --------- | --------- | ----------------------------------------------------------- |
+| id        | uuid      |                                                             |
+| userId    | uuid      |                                                             |
+| eventId   | uuid?     | null only for a platform-wide Admin                         |
+| role      | Role      | Director / Team / Driver (Admin is global)                  |
+| teamId    | uuid?     | set for `Team` and `Driver` roles — the team they belong to |
+| driverId  | uuid?     | set for `Driver` role — the driver they are                 |
+| createdAt | timestamp |                                                             |
+
+A user may hold several memberships (e.g. Director of one event, Team manager in
+another). The **active scope** for a request is derived from the membership matching the
+event/team being accessed.
+
+### Invitation
+
+The only way to gain access (invite-only). Created by a higher tier for a lower one.
+
+| Field     | Type      | Notes                                          |
+| --------- | --------- | ---------------------------------------------- |
+| id        | uuid      |                                                |
+| email     | string    | invitee                                        |
+| eventId   | uuid?     | scope of the grant                             |
+| role      | Role      | the role being granted                         |
+| teamId    | uuid?     | for Team/Driver invites                        |
+| token     | string    | single-use, hashed at rest, expiring           |
+| invitedBy | uuid      | the issuing user (must out-rank the grant)     |
+| status    | enum      | `pending` · `accepted` · `revoked` · `expired` |
+| expiresAt | timestamp |                                                |
+
+Hierarchy: Admin → invites Director; Director → invites Team (to their event); Team →
+invites Driver (to their team). Accepting an invitation creates the `Membership`.
+
+### Bridge to the race domain
+
+- A `Membership` with role `Team` links a `User` to a domain **`Team`** (the competitor
+  entry) within an `Event`.
+- A `Membership` with role `Driver` links a `User` to a domain **`Driver`** within a
+  `Team`. The user-supplied driver/kart tags from the analysis engine become editable
+  only by users whose scope covers that team.
