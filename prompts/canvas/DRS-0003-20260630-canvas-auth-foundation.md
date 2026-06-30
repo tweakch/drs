@@ -2,7 +2,7 @@
 id: DRS-0003
 slice: auth-foundation
 type: canvas
-status: approved
+status: implemented
 created: 2026-06-30
 updated: 2026-06-30
 source_story: ../stories/DRS-0003-auth-foundation.story.md
@@ -111,3 +111,10 @@ for DB-backed auth paths.
 ## Changelog
 
 - 2026-06-30 — created; open questions resolved via design forum → ADR-0006. Approved.
+- 2026-06-30 — **implemented** via `spdd-generate` (delegated); gates green with no env
+  (lint/typecheck/test [25 tests]/build). Code-first sync deviations: middleware uses
+  `export default NextAuth(authConfig).auth` (Next 16 rejects the destructured export) with a
+  split `auth.config.ts`; `can(session, …)` takes the session explicitly; `createInvitation`
+  takes `invitedByRole` (out-rank enforced in the choke point); `rbac.getSession`
+  lazy-imports `@/auth` so predicates test without the Node adapter; the primary gate is the
+  `(app)` layout `auth()` check (middleware is the coarse redirect).

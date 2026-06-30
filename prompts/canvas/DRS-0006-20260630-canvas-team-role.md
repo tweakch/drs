@@ -2,7 +2,7 @@
 id: DRS-0006
 slice: team-role
 type: canvas
-status: approved
+status: implemented
 created: 2026-06-30
 updated: 2026-06-30
 source_story: ../stories/DRS-0006-team-role.story.md
@@ -56,3 +56,5 @@ Strict team isolation; 404 over 403 cross-tenant.
 ## Changelog
 
 - 2026-06-30 — created (role layer); forum/ADR-0006. Approved.
+- 2026-06-30 — **implemented** via `spdd-generate`; `/team` console live (roster + invite
+  Driver), team-scoped (404 cross-tenant), gates green. Tagging/analysis deferred.

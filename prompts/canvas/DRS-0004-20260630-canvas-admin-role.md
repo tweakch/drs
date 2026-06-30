@@ -2,7 +2,7 @@
 id: DRS-0004
 slice: admin-role
 type: canvas
-status: approved
+status: implemented
 created: 2026-06-30
 updated: 2026-06-30
 source_story: ../stories/DRS-0004-admin-role.story.md
@@ -57,3 +57,5 @@ only cross-tenant role; still server-checked. No destructive cascade on user rem
 ## Changelog
 
 - 2026-06-30 — created (role layer); forum/ADR-0006. Approved.
+- 2026-06-30 — **implemented** via `spdd-generate`; `/admin` console live (users/events/
+  invites + invite-Director), admin-only guard, gates green.

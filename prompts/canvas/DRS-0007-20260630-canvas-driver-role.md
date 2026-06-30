@@ -2,7 +2,7 @@
 id: DRS-0007
 slice: driver-role
 type: canvas
-status: approved
+status: implemented
 created: 2026-06-30
 updated: 2026-06-30
 source_story: ../stories/DRS-0007-driver-role.story.md
@@ -58,3 +58,5 @@ numbers + anonymized rank vs field (when the engine lands).
 ## Changelog
 
 - 2026-06-30 — created (role layer); forum/ADR-0006. Approved.
+- 2026-06-30 — **implemented** via `spdd-generate`; `/driver` console live (own profile +
+  edit name; metrics placeholder), self-scoped, gates green.
