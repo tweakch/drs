@@ -3,6 +3,7 @@
 // `next build` and the Edge runtime stay green.
 import type { NextAuthConfig } from 'next-auth';
 import Resend from 'next-auth/providers/resend';
+import { resolveEmailFrom } from '@/lib/auth/email-from';
 
 export default {
   // The Resend provider is an *email* provider, which Auth.js requires to be
@@ -15,7 +16,9 @@ export default {
       ? [
           Resend({
             apiKey: process.env.AUTH_RESEND_KEY,
-            from: process.env.AUTH_EMAIL_FROM ?? 'onboarding@resend.dev',
+            // Free-mail domains can't be Resend-verified and 403 on send; fall back
+            // to the onboarding sender so sign-in works. See lib/auth/email-from.ts.
+            from: resolveEmailFrom(process.env.AUTH_EMAIL_FROM),
           }),
         ]
       : [],
