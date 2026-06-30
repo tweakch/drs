@@ -18,14 +18,14 @@ _Updated each wave. See `prompts/canvas/` for the REASONS Canvas behind each vie
 
 ### Data (8)
 
-- ⬜ D1 — paste freeform intake (`Name: t, t, …`)
-- ⬜ D2 — CSV intake (`Kart,Lap,Time`)
-- ⬜ D3 — load sample / seeded race
-- ⬜ D4 — synthetic demo generator
-- ⬜ D5 — editable lap grid
-- ⬜ D6 — driver tagging (per stint)
-- ⬜ D7 — kart tagging (per stint)
-- ⬜ D8 — pit-lap dimming
+- ✅ D1 — paste freeform intake (`Name: t, t, …`)
+- ✅ D2 — CSV intake (`Kart,Lap,Time`)
+- ✅ D3 — load sample / seeded race
+- ✅ D4 — synthetic demo generator
+- ✅ D5 — editable lap grid
+- ✅ D6 — driver tagging (per stint)
+- ✅ D7 — kart tagging (per stint)
+- ✅ D8 — pit-lap dimming
 
 ### Race (12)
 
@@ -105,4 +105,4 @@ _Updated each wave. See `prompts/canvas/` for the REASONS Canvas behind each vie
 
 ## Tally
 
-- Landed: **15 / 60** (25 %)
+- Landed: **23 / 60** (38 %) — Wave 1 complete (engine + Data + Race)
