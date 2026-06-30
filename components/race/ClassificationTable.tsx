@@ -100,7 +100,10 @@ export function ClassificationTable({ data }: { data: TeamAnalysis[] }) {
                   ) : c.key === 'pos' ? (
                     <span className={d.pos === 1 ? 'font-bold text-hot' : ''}>{d.pos}</span>
                   ) : c.key === 'best' ? (
-                    <span className={d.best === fieldBest ? 'font-bold text-hot' : ''}>
+                    <span
+                      className={d.best === fieldBest ? 'font-bold text-sbest' : ''}
+                      title={d.best === fieldBest ? 'Session best' : undefined}
+                    >
                       {FMT(d.best)}
                     </span>
                   ) : (
