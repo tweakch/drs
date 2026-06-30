@@ -8,12 +8,14 @@ export interface ViewDef {
 
 export const VIEWS: ViewDef[] = [
   { key: 'data', label: 'Data', href: '/data' },
-  { key: 'director', label: 'Director', href: '/director' },
-  { key: 'product', label: 'Product', href: '/product' },
   { key: 'race', label: 'Race', href: '/race' },
-  { key: 'team', label: 'Team', href: '/team' },
-  { key: 'driver', label: 'Driver', href: '/driver' },
+  { key: 'stints', label: 'Stints', href: '/stints' },
+  { key: 'leaderboard', label: 'Leaderboard', href: '/leaderboard' },
   { key: 'kart', label: 'Kart', href: '/kart' },
   { key: 'detektiv', label: 'Detektiv', href: '/detektiv' },
   { key: 'replay', label: 'Replay', href: '/replay' },
+  // Role consoles (RBAC) — management, distinct from the analytical views above.
+  { key: 'director', label: 'Director', href: '/director' },
+  { key: 'team', label: 'Team', href: '/team' },
+  { key: 'driver', label: 'Driver', href: '/driver' },
 ];
