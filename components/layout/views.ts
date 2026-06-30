@@ -7,6 +7,7 @@ export interface ViewDef {
 }
 
 export const VIEWS: ViewDef[] = [
+  { key: 'circuits', label: 'Circuits', href: '/circuits' },
   { key: 'data', label: 'Data', href: '/data' },
   { key: 'race', label: 'Race', href: '/race' },
   { key: 'stints', label: 'Stints', href: '/stints' },
