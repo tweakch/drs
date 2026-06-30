@@ -15,7 +15,7 @@ export default function SignInPage() {
     <main className="mx-auto grid min-h-screen max-w-[1100px] items-center gap-10 px-6 py-16 lg:grid-cols-[1.1fr_minmax(0,420px)] lg:py-24">
       <div className="order-2 lg:order-1">
         <LandingReplay race={race} />
-        <p className="mt-3 text-center text-xs text-dim">Live replay — {race.name}</p>
+        <p className="mt-3 text-center text-xs text-dim">Replay — {race.name}</p>
       </div>
 
       <div className="order-1 mx-auto w-full max-w-[420px] lg:order-2">

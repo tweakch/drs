@@ -21,9 +21,9 @@ export function ReplayLeaderboard({ standings }: { standings: Standing[] }) {
   if (!leader) return null;
 
   return (
-    <div className="w-[150px] rounded-md border border-line bg-asphalt/85 backdrop-blur-sm sm:w-[170px]">
+    <div className="w-full shrink-0 self-start rounded-md border border-line bg-asphalt sm:w-[170px]">
       <div className="flex items-baseline justify-between border-b border-line px-2 py-1.5">
-        <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">Live</span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">Replay</span>
         <span className="font-mono text-[10px] tabular-nums text-dim">
           Lap {leader.lap}/{leader.totalLaps}
         </span>
