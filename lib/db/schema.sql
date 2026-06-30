@@ -172,9 +172,11 @@ alter table teams add column if not exists driver_id      uuid references driver
 alter table teams add column if not exists constructor_id uuid references constructors (id);
 alter table teams add column if not exists source_ref     text;
 
--- Natural-key uniqueness for `on conflict` upserts (partial: only seeded rows
--- carry a source_ref, so hand-entered kart races are unaffected).
-create unique index if not exists races_source_ref_uq on races (source_ref) where source_ref is not null;
-create unique index if not exists teams_source_ref_uq on teams (source_ref) where source_ref is not null;
+-- Natural-key uniqueness for `on conflict (source_ref)` upserts. A plain (non-partial)
+-- unique index: Postgres treats NULLs as distinct, so any number of hand-entered kart
+-- races (source_ref null) are still allowed, while seeded rows stay unique. (A partial
+-- index would NOT match a bare `on conflict (source_ref)` arbiter.)
+create unique index if not exists races_source_ref_uq on races (source_ref);
+create unique index if not exists teams_source_ref_uq on teams (source_ref);
 -- Laps upsert on (team_id, idx); complements the existing non-unique lookup index.
 create unique index if not exists laps_team_idx_uq on laps (team_id, idx);

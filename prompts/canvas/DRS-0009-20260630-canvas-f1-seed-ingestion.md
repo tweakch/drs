@@ -63,8 +63,8 @@ No new deps (reuses `zod` + `@neondatabase/serverless`).
 ## O — Operations
 
 1. **Schema (additive/idempotent).** `tracks`, `constructors`, `drivers`; nullable FKs
-   `races.track_id`, `teams.driver_id|constructor_id`; `season/round/source_ref`; partial
-   unique indexes on `source_ref` + unique `(team_id, idx)`.
+   `races.track_id`, `teams.driver_id|constructor_id`; `season/round/source_ref`; plain
+   unique indexes on `source_ref` (NULLs distinct → many kart races) + unique `(team_id, idx)`.
    - _Accept:_ `pnpm migrate` is a no-op on re-run; kart-domain tables/rows untouched.
 2. **Pure transform.** `parseLapTime` (`M:SS.mmm`|secs); `buildFixture` (dedupe
    constructors/drivers, merge laps per driver, winner-millis duration, stand-in length);
