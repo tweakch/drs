@@ -15,7 +15,7 @@ export function CircuitShape({ track, className = '' }: { track: Track; classNam
   if (track.shape === 'traced' && track.layout) {
     return (
       <svg
-        viewBox={TRACED_VIEWBOX}
+        viewBox={track.layoutViewBox ?? TRACED_VIEWBOX}
         role="img"
         aria-label={`${track.name} outline`}
         className={className}

@@ -5,6 +5,12 @@
 import { TRACK_PATH } from '@/lib/race/sample-race';
 import type { CalendarEvent, Track } from './types';
 
+// Kartbahn Lyss — traced from OpenStreetMap raceway ways 163872055 (main loop) +
+// 163872052 (Kurzanbindung connector), lat/lon projected (cos-lat corrected) into a
+// normalised viewBox — the same recipe as Wohlen (see TRACKS.md). © OSM contributors.
+const LYSS_PATH =
+  'M 155.6 312.1 L 158.2 293.9 L 163.5 282.8 L 170.7 274.4 L 182.3 271.4 L 208 267.7 L 216.7 259.9 L 220.9 247.6 L 219 234.2 L 212.3 225.6 L 200.7 220.8 L 187.7 221.6 L 177.9 229.2 L 121.9 290.5 L 114.6 295.4 L 106.7 298.4 L 94.9 296.7 L 86.4 288.9 L 83 283.5 L 71.7 238.6 L 71.3 227.2 L 74.3 215.2 L 82.7 204.1 L 137.2 166.9 L 150.7 156.5 L 155.5 145.2 L 157.4 133.4 L 152.2 120.6 L 141.6 112 L 129.9 109.3 L 117.3 111.6 L 94.3 122.1 L 81.5 137.2 L 55.4 172.5 L 48.6 181.5 L 40.5 206.2 L 39.9 216.5 L 41.6 224.9 L 47.8 249.1 L 61.2 285.2 L 77.3 328.1 L 86.5 346.7 L 100.3 375.6 L 115.9 384 L 129.5 381.6 L 138.7 375.9 L 145.7 364.5 M 94.3 122.1 L 84.5 121.5 L 79 113.9 L 73.5 87.4 L 64.1 40.2 L 60 31 L 51.9 25.4 L 42.4 24 L 34.8 27 L 26.8 33.4 L 24 43.3 L 25.2 57.9 L 29 83 L 34.4 121.3 L 37.4 131.1 L 42.3 142.9 L 47.4 156.4 L 48.1 168.6 L 48.6 181.5';
+
 export const TRACKS: Track[] = [
   {
     slug: 'wohlen',
@@ -21,6 +27,7 @@ export const TRACKS: Track[] = [
     website: 'https://www.kartbahnwohlen.ch/',
     shape: 'traced',
     layout: TRACK_PATH,
+    layoutViewBox: '320 40 270 340',
   },
   {
     slug: 'lyss',
@@ -33,7 +40,9 @@ export const TRACKS: Track[] = [
     assHomologated: true,
     status: 'operating',
     website: 'https://kartbahnlyss.ch/',
-    shape: 'none',
+    shape: 'traced',
+    layout: LYSS_PATH,
+    layoutViewBox: '0 0 245 408',
   },
   {
     slug: 'magadino',

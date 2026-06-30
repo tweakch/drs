@@ -20,8 +20,13 @@ describe('registry — tracks', () => {
     ).toEqual(['lyss', 'magadino', 'wohlen']);
   });
 
-  it('only Wohlen carries a traced shape so far', () => {
-    expect(TRACKS.filter((t) => t.shape === 'traced').map((t) => t.slug)).toEqual(['wohlen']);
+  it('traced circuits carry a layout and its viewBox', () => {
+    const traced = TRACKS.filter((t) => t.shape === 'traced');
+    expect(traced.map((t) => t.slug).sort()).toEqual(['lyss', 'wohlen']);
+    for (const t of traced) {
+      expect(t.layout).toContain('M ');
+      expect(t.layoutViewBox).toMatch(/^[\d.\s]+$/);
+    }
   });
 });
 
