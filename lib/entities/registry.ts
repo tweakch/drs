@@ -8,6 +8,11 @@ import type { CalendarEvent, Track } from './types';
 // Kartbahn Lyss — traced from OpenStreetMap raceway ways 163872055 (main loop) +
 // 163872052 (Kurzanbindung connector), lat/lon projected (cos-lat corrected) into a
 // normalised viewBox — the same recipe as Wohlen (see TRACKS.md). © OSM contributors.
+// Pista GOKART Locarno-Magadino — traced from OSM raceway ways 317955526 (main loop)
+// + 1358170423 (the optional T1 chicane), via `pnpm trace`. © OSM contributors (ODbL).
+const MAGADINO_PATH =
+  'M 304.2 139.5 L 114.3 193.4 L 108.4 194.2 L 104.9 193.4 L 101.9 191.7 L 99.3 189.5 L 98.1 186.8 L 94 153.8 L 92.8 147.6 L 88.9 143 L 83.5 139.8 L 76.2 139.4 L 39.9 150.8 L 34 150.8 L 27.9 147.1 L 25.2 142.7 L 24 136.9 L 24.3 131 L 26.4 125 L 30.3 120.5 L 36.9 114.7 L 79.8 102.3 L 87.2 102 L 95.9 103 L 154.2 137.6 L 159.3 140.5 L 165 141.7 L 170.9 141 L 176.2 138.6 L 180.6 134.6 L 183.3 130 L 184.6 124.9 L 184.4 119.5 L 179.3 98.8 L 178.7 91.8 L 179.4 84.9 L 182.3 79 L 186.9 73.8 L 193.4 70.3 L 200.4 68.5 L 206.7 67.6 L 213.5 68.2 L 219.3 70.1 L 224.5 73.2 L 265.9 109.4 L 273.7 112.8 L 282.5 112.8 L 290.3 110.5 L 296.9 104.4 L 300.8 96.7 L 310.6 58.7 L 313.4 50.9 L 315.8 45.1 L 318.6 41.1 L 322.8 37.4 L 329 33.3 L 336.6 29.6 L 347 26 L 353.9 24.5 L 359.9 24 L 365.7 25 L 370 26.7 L 374 29.2 L 377.6 32.7 L 382.1 40.1 L 383.8 47.4 L 384 54.5 L 382.3 61.1 L 378.9 66.9 L 374.7 72 L 333.4 116.8 L 326 126.2 L 321.6 130.7 L 312.5 136.3 L 304.2 139.5 M 114.3 193.4 L 92.8 199.6 L 70.5 204.6 L 55 203.8 L 44.2 198.1 L 37.5 188.1 L 30.5 171.7 L 26.4 155 L 25.2 142.7';
+
 const LYSS_PATH =
   'M 155.6 312.1 L 158.2 293.9 L 163.5 282.8 L 170.7 274.4 L 182.3 271.4 L 208 267.7 L 216.7 259.9 L 220.9 247.6 L 219 234.2 L 212.3 225.6 L 200.7 220.8 L 187.7 221.6 L 177.9 229.2 L 121.9 290.5 L 114.6 295.4 L 106.7 298.4 L 94.9 296.7 L 86.4 288.9 L 83 283.5 L 71.7 238.6 L 71.3 227.2 L 74.3 215.2 L 82.7 204.1 L 137.2 166.9 L 150.7 156.5 L 155.5 145.2 L 157.4 133.4 L 152.2 120.6 L 141.6 112 L 129.9 109.3 L 117.3 111.6 L 94.3 122.1 L 81.5 137.2 L 55.4 172.5 L 48.6 181.5 L 40.5 206.2 L 39.9 216.5 L 41.6 224.9 L 47.8 249.1 L 61.2 285.2 L 77.3 328.1 L 86.5 346.7 L 100.3 375.6 L 115.9 384 L 129.5 381.6 L 138.7 375.9 L 145.7 364.5 M 94.3 122.1 L 84.5 121.5 L 79 113.9 L 73.5 87.4 L 64.1 40.2 L 60 31 L 51.9 25.4 L 42.4 24 L 34.8 27 L 26.8 33.4 L 24 43.3 L 25.2 57.9 L 29 83 L 34.4 121.3 L 37.4 131.1 L 42.3 142.9 L 47.4 156.4 L 48.1 168.6 L 48.6 181.5';
 
@@ -56,7 +61,9 @@ export const TRACKS: Track[] = [
     assHomologated: true,
     status: 'operating',
     website: 'https://www.karts.ch/',
-    shape: 'external',
+    shape: 'traced',
+    layout: MAGADINO_PATH,
+    layoutViewBox: '0 0 408 228.6',
   },
   {
     slug: 'spreitenbach',

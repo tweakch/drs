@@ -22,7 +22,7 @@ describe('registry — tracks', () => {
 
   it('traced circuits carry a layout and its viewBox', () => {
     const traced = TRACKS.filter((t) => t.shape === 'traced');
-    expect(traced.map((t) => t.slug).sort()).toEqual(['lyss', 'wohlen']);
+    expect(traced.map((t) => t.slug).sort()).toEqual(['lyss', 'magadino', 'wohlen']);
     for (const t of traced) {
       expect(t.layout).toContain('M ');
       expect(t.layoutViewBox).toMatch(/^[\d.\s]+$/);

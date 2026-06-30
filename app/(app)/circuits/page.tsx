@@ -55,9 +55,10 @@ export default function CircuitsPage() {
       </div>
 
       <p className="text-[12px] text-dim">
-        {stats.traced} of {stats.tracks} circuits traced so far — Wohlen and Lyss, projected from
-        their OpenStreetMap ways. Every ghost outline is an open invitation: trace a circuit and it
-        lights up across the app.
+        {stats.traced} of {stats.tracks} circuits traced so far, projected from their OpenStreetMap
+        ways. Every ghost outline is an open invitation: run{' '}
+        <code className="text-muted">pnpm trace</code> on a circuit&apos;s OSM way and it lights up
+        across the app.
       </p>
     </div>
   );
