@@ -1,0 +1,17 @@
+# Generated / vendored
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+pnpm-lock.yaml
+.husky/_/
+.vercel/
+
+# Non-source text without a Prettier parser
+LICENSE
+NOTICE
+
+# Reference prototype (kept verbatim, not ours to format)
+wohlen-race-analysis.html

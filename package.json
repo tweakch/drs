@@ -1,0 +1,55 @@
+{
+  "name": "drs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "DRS — kart-race After-Action Review. Next.js app on the DRS-0001 foundation.",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "migrate": "node --experimental-strip-types lib/db/migrate.ts",
+    "format": "prettier --write \"**/*.{md,json,jsonc,yml,yaml,js,cjs,mjs,ts,tsx,jsx,css}\"",
+    "format:check": "prettier --check \"**/*.{md,json,jsonc,yml,yaml,js,cjs,mjs,ts,tsx,jsx,css}\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*": "prettier --write --ignore-unknown",
+    "*.{ts,tsx}": "eslint --fix"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "@vercel/blob": "^2.5.0",
+    "chart.js": "^4.5.1",
+    "next": "^16.2.9",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "@tailwindcss/postcss": "^4.3.2",
+    "@types/node": "^26.0.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.9",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.0",
+    "lint-staged": "^15.2.0",
+    "postcss": "^8.4.0",
+    "prettier": "^3.3.0",
+    "tailwindcss": "^4.3.2",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  }
+}

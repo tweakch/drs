@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/tweakch/drs/security/advisories/new
+    about: Please report security issues privately — see SECURITY.md, do not open a public issue.
+  - name: SPDD workflow & contributing
+    url: https://github.com/tweakch/drs/blob/main/CONTRIBUTING.md
+    about: How we work — the Structured-Prompt-Driven Development loop and dev setup.

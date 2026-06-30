@@ -1,0 +1,2997 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wohlen 2h GP — Race Analysis</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --asphalt:#16181d; --asphalt-2:#1d2026; --line:#2b2f38;
+    --paint:#f4f4f1; --muted:#8a909c; --dim:#5c6270;
+    --hot:#ff5a3c;      /* fast / personal best */
+    --cool:#3ea7ff;     /* reference */
+    --warn:#ffc23c;     /* degradation */
+    --good:#3ddc91;     /* consistency */
+    --kerb:#e23b3b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:
+      repeating-linear-gradient(90deg,transparent 0 38px,rgba(255,255,255,.012) 38px 40px),
+      var(--asphalt);
+    color:var(--paint);
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.45;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 22px 80px}
+
+  /* ---- header ---- */
+  header{border-bottom:2px solid var(--line);padding-bottom:18px;margin-bottom:26px}
+  .eyebrow{font:600 11px/1 "Helvetica Neue";letter-spacing:.32em;text-transform:uppercase;color:var(--hot)}
+  h1{font:800 clamp(30px,5vw,52px)/.95 "Helvetica Neue";letter-spacing:-.02em;margin:10px 0 6px;text-transform:uppercase}
+  .meta{color:var(--muted);font:500 13px/1.5 "Helvetica Neue";letter-spacing:.02em}
+  .meta b{color:var(--paint)}
+
+  /* ---- intake ---- */
+  .intake{background:var(--asphalt-2);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:24px}
+  .intake h2{font:700 13px/1 "Helvetica Neue";letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  textarea{width:100%;min-height:120px;background:#0f1115;border:1px solid var(--line);border-radius:7px;
+    color:var(--paint);font:13px/1.5 "SF Mono",Menlo,Consolas,monospace;padding:12px;resize:vertical}
+  textarea:focus{outline:none;border-color:var(--cool)}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;align-items:center}
+  button{background:var(--hot);color:#fff;border:none;border-radius:6px;font:700 12px/1 "Helvetica Neue";
+    letter-spacing:.08em;text-transform:uppercase;padding:11px 18px;cursor:pointer;transition:filter .15s}
+  button:hover{filter:brightness(1.12)}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
+  button.ghost.real{border-color:var(--hot);color:var(--paint)}
+  button.ghost.real:hover{background:rgba(232,93,40,.12);border-color:var(--hot)}
+  button.ghost:hover{border-color:var(--cool);color:var(--paint)}
+  .hint{color:var(--dim);font:500 12px/1.5 "Helvetica Neue";flex:1;min-width:200px}
+  .demo-gen{display:inline-flex;align-items:center;gap:8px}
+  .teamsel{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font:600 12px/1 "Helvetica Neue"}
+  .teamsel select{background:#0f1115;border:1px solid var(--line);color:var(--paint);border-radius:6px;
+    font:700 13px/1 "Helvetica Neue";padding:8px 10px;cursor:pointer}
+  .teamsel select:focus{outline:none;border-color:var(--cool)}
+  .hint code{color:var(--cool)}
+
+  /* ---- layout ---- */
+  .grid{display:grid;gap:16px}
+  .cols-4{grid-template-columns:repeat(4,1fr)}
+  .cols-2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:880px){.cols-4{grid-template-columns:repeat(2,1fr)}.cols-2{grid-template-columns:1fr}}
+  @media(max-width:520px){.cols-4{grid-template-columns:1fr}}
+
+  .card{background:var(--asphalt-2);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+  .card h3{font:700 11px/1 "Helvetica Neue";letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+  .kpi .num{font:800 30px/1 "Helvetica Neue";letter-spacing:-.02em}
+  .kpi .lbl{font:600 10px/1 "Helvetica Neue";letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-top:6px}
+  .kpi .sub{color:var(--muted);font:500 12px/1.4 "Helvetica Neue";margin-top:6px}
+
+  section{margin-top:30px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:16px}
+  .sec-head .n{font:800 13px/1 "Helvetica Neue";color:var(--hot)}
+  .sec-head h2{font:800 18px/1 "Helvetica Neue";letter-spacing:-.01em;text-transform:uppercase}
+  .sec-head .note{color:var(--dim);font:500 12px/1;margin-left:auto}
+
+  /* ---- table ---- */
+  table{width:100%;border-collapse:collapse;font:500 13px/1.4 "Helvetica Neue"}
+  th{font:700 10px/1 "Helvetica Neue";letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+    text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  th.active{color:var(--cool)}
+  td{padding:9px 10px;border-bottom:1px solid #23262e;text-align:right;font-variant-numeric:tabular-nums}
+  tr:hover td{background:#1a1d23}
+  .swatch{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;vertical-align:middle}
+  .tag{font:700 9px/1 "Helvetica Neue";letter-spacing:.08em;text-transform:uppercase;padding:3px 6px;border-radius:4px;display:inline-block}
+  .t-fast{background:rgba(255,90,60,.16);color:var(--hot)}
+  .t-cons{background:rgba(61,220,145,.14);color:var(--good)}
+  .t-deg{background:rgba(255,194,60,.14);color:var(--warn)}
+  .bar{height:6px;border-radius:3px;background:#0f1115;overflow:hidden;min-width:60px}
+  .bar i{display:block;height:100%}
+
+  canvas{max-height:340px}
+  .chartcard{background:var(--asphalt-2);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font:500 12px/1 "Helvetica Neue";color:var(--muted)}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .leg-item{cursor:pointer;user-select:none;padding:3px 6px;border-radius:5px;transition:background .12s,opacity .12s}
+  .leg-item:hover{background:rgba(255,255,255,.06);color:var(--paint)}
+  .leg-item.off{opacity:.38;text-decoration:line-through}
+  .leg-item.off .swatch{filter:grayscale(1)}
+  .leg-allbtns{display:flex;gap:4px;margin-left:4px}
+  .leg-mini{font:600 10px/1 "Helvetica Neue";text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;background:transparent;border:1px solid var(--line);border-radius:5px;color:var(--muted);cursor:pointer}
+  .leg-mini:hover{color:var(--paint);border-color:var(--dim)}
+  .empty{color:var(--dim);font:500 14px/1.6 "Helvetica Neue";text-align:center;padding:50px 20px}
+  .insight{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid #23262e;font:500 14px/1.5 "Helvetica Neue"}
+  .insight:last-child{border:none}
+  .insight .mk{flex-shrink:0;font:800 12px/1.5 "Helvetica Neue";width:74px;letter-spacing:.06em;text-transform:uppercase}
+  .insight b{color:var(--paint)}
+  .insight em{color:var(--muted);font-style:normal}
+  /* ---- tabs & views ---- */
+  .tabs{display:flex;gap:2px;border-bottom:2px solid var(--line);margin-bottom:22px;flex-wrap:wrap}
+  .tab{background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);
+    font:700 13px/1 "Helvetica Neue";letter-spacing:.06em;text-transform:uppercase;padding:13px 18px;margin-bottom:-2px;border-radius:0;cursor:pointer}
+  .tab:hover{color:var(--paint)}
+  .tab.active{color:var(--paint);border-bottom-color:var(--hot)}
+  .view{display:none}
+  .view.active{display:block;animation:fade .2s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+
+  /* ---- per-view virtual toggle bar ---- */
+  .vbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--asphalt-2);border:1px solid var(--line);
+    border-radius:9px;padding:12px 16px;margin-bottom:20px}
+  .vbar.on{border-color:rgba(62,167,255,.45);background:rgba(62,167,255,.06)}
+  .vswitch{display:flex;align-items:center;gap:9px;font:700 12px/1 "Helvetica Neue";letter-spacing:.05em;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none}
+  .vswitch input{appearance:none;width:38px;height:21px;background:#0f1115;border:1px solid var(--line);border-radius:11px;position:relative;cursor:pointer;transition:.15s;flex-shrink:0}
+  .vswitch input:checked{background:var(--cool);border-color:var(--cool)}
+  .vswitch input::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--paint);transition:.15s}
+  .vswitch input:checked::after{left:19px}
+  .vswitch.on{color:var(--cool)}
+  .vbar .vstatus{font:500 12px/1.4 "Helvetica Neue";color:var(--dim);flex:1;min-width:180px}
+  .vbar .vstatus b{color:var(--paint)}
+  .vbar .vreset{background:transparent;border:1px solid var(--line);color:var(--muted);padding:7px 13px;font:600 11px/1 "Helvetica Neue";letter-spacing:.04em;text-transform:uppercase;border-radius:6px}
+  .vbar .vreset:hover{border-color:var(--kerb);color:var(--paint)}
+  .vGlobalBadge{display:inline-block;background:var(--cool);color:#06121f;font:800 10px/1 "Helvetica Neue";letter-spacing:.12em;text-transform:uppercase;padding:4px 8px;border-radius:5px;margin-left:8px;vertical-align:middle}
+
+  /* ---- editable lap grid ---- */
+  .editgrid-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:9px;background:var(--asphalt-2)}
+  table.editgrid{min-width:max-content;border-collapse:collapse}
+  table.editgrid th{position:sticky;top:0;background:var(--asphalt-2);z-index:1;padding:8px 8px;font-size:10px}
+  table.editgrid th.cell0,table.editgrid td.cell0{position:sticky;left:0;background:var(--asphalt-2);z-index:2;text-align:left;color:var(--dim);font-weight:700;min-width:42px}
+  table.editgrid td{padding:2px 3px;border-bottom:1px solid #23262e}
+  .lap-cell{width:62px;background:#0f1115;border:1px solid transparent;border-radius:4px;color:var(--paint);
+    font:500 12px/1 "SF Mono",Menlo,monospace;padding:5px 5px;text-align:right}
+  .lap-cell:hover{border-color:var(--line)}
+  .lap-cell:focus{outline:none;border-color:var(--cool);background:#16181d}
+  .lap-cell.edited{color:var(--cool);font-weight:700;background:rgba(62,167,255,.10)}
+  .lap-cell.pit{color:#6b7280;font-style:italic}
+  .tagrow td{padding:5px 3px;border-bottom:2px solid var(--line)}
+  .tag-cell{display:flex;flex-direction:column;gap:3px}
+  .tag-cell input{width:84px;background:#16181d;border:1px solid var(--line);border-radius:4px;padding:4px 6px;font:600 11px/1 "Helvetica Neue"}
+  .tag-cell input.k{color:var(--cool);font-family:"SF Mono",monospace}
+  .tag-cell input:focus{outline:none;border-color:var(--cool)}
+  .editnote{color:var(--dim);font:500 12px/1.5 "Helvetica Neue";margin-bottom:12px}
+  .editnote b{color:var(--cool)}
+
+  .foot{margin-top:40px;color:var(--dim);font:500 11px/1.6 "Helvetica Neue";border-top:1px solid var(--line);padding-top:14px}
+
+  /* ---- replay ---- */
+  .replay-wrap{display:grid;grid-template-columns:235px 1fr 270px;gap:16px}
+  @media(max-width:1100px){.replay-wrap{grid-template-columns:200px 1fr}.replay-side{grid-column:1/-1}}
+  @media(max-width:820px){.replay-wrap{grid-template-columns:1fr}.replay-side{grid-column:auto}}
+  .replay-board{padding:12px 12px 14px;display:flex;flex-direction:column;min-height:0}
+  .rb-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;
+    padding-bottom:9px;border-bottom:1px solid var(--line)}
+  .rb-title{font:800 11px/1 "Helvetica Neue";letter-spacing:.12em;text-transform:uppercase;color:var(--paint)}
+  .rb-leadlap{font:700 10px/1 "Helvetica Neue";color:var(--dim);font-variant-numeric:tabular-nums}
+  .rp-board{display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+  .replay-stage{padding:8px;background:#0d0f13}
+  #replaySvg{width:100%;height:auto;display:block}
+  .trk-base{fill:none;stroke:#23262e;stroke-width:30;stroke-linejoin:round;stroke-linecap:round}
+  .trk-edge{fill:none;stroke:#2f3440;stroke-width:26;stroke-linejoin:round;stroke-linecap:round}
+  .trk-line{fill:none;stroke:#0d0f13;stroke-width:22;stroke-linejoin:round;stroke-linecap:round}
+  .pit-base{fill:none;stroke:#23262e;stroke-width:17;stroke-linejoin:round;stroke-linecap:round}
+  .pit-edge{fill:none;stroke:#2a2e38;stroke-width:14;stroke-linejoin:round;stroke-linecap:round}
+  .pit-line{fill:none;stroke:#0d0f13;stroke-width:11;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:7 5}
+  .pit-text{fill:var(--dim);font:800 9px/1 "Helvetica Neue";letter-spacing:.18em;text-anchor:middle}
+  /* product · go-live */
+  .prod-summary{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 22px}
+  .ps-card{flex:1;min-width:130px;background:var(--asphalt-2);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .ps-big{font:700 26px/1 "Helvetica Neue";color:var(--paint)}
+  .ps-lbl{font-size:11px;color:var(--dim);margin-top:4px}
+  .ps-bar{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:8px}
+  .ps-fill{height:100%;background:linear-gradient(90deg,var(--hot),#7ed957);border-radius:4px;transition:width .3s}
+  .ps-reset{display:flex;flex-direction:column;gap:6px;justify-content:center;align-items:flex-start}
+  .prod-block{margin:0 0 26px}
+  .prod-bh{display:flex;align-items:baseline;gap:12px;margin:0 0 12px;flex-wrap:wrap}
+  .prod-bh h2{font:700 16px/1 "Helvetica Neue";color:var(--paint);margin:0}
+  .pr-in{background:transparent;border:1px solid transparent;border-radius:5px;color:var(--paint);padding:5px 7px;font:500 13px/1.3 "Helvetica Neue";width:100%}
+  .pr-in:hover{border-color:var(--line)} .pr-in:focus{border-color:var(--cool);outline:none;background:#16181d}
+  .pr-strong{font-weight:600}
+  .pr-wide{min-width:220px}
+  .pr-note{color:var(--muted);font-size:12px;margin-top:4px}
+  .prod-table td{vertical-align:middle}
+  .pstatus{border:none;border-radius:20px;padding:5px 12px;font:600 11px/1 "Helvetica Neue";cursor:pointer;white-space:nowrap}
+  .pstatus.sm{padding:3px 9px;font-size:10px}
+  .ps-open{background:rgba(255,255,255,.08);color:var(--muted)}
+  .ps-prog{background:rgba(255,194,60,.18);color:#ffc23c}
+  .ps-done{background:rgba(126,217,87,.18);color:#7ed957}
+  .pr-x{background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:13px;padding:4px 7px;border-radius:5px}
+  .pr-x:hover{background:rgba(255,90,60,.14);color:#ff6b6b}
+  /* milestones */
+  .mile-list{display:flex;flex-direction:column;gap:10px;border-left:2px solid var(--line);padding-left:4px;margin-left:6px}
+  .mile{display:flex;gap:12px;align-items:flex-start;background:var(--asphalt-2);border:1px solid var(--line);border-radius:9px;padding:11px 13px;position:relative}
+  .mile-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--asphalt);cursor:pointer;flex:0 0 auto;margin-top:3px;margin-left:-14px}
+  .mile-dot.ps-open{background:#5b6068} .mile-dot.ps-prog{background:#ffc23c} .mile-dot.ps-done{background:#7ed957}
+  .mile-body{flex:1;min-width:0}
+  .mile-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .mile-title{flex:1;min-width:160px;font-size:14px}
+  .pr-date{background:#16181d;border:1px solid var(--line);border-radius:5px;color:var(--paint);padding:4px 7px;font-size:12px;color-scheme:dark}
+  /* checklist */
+  .ck-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+  .ck-cat{background:var(--asphalt-2);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .ck-cat-head{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 8px}
+  .ck-cat-head h3{font:700 13px/1 "Helvetica Neue";color:var(--paint);margin:0}
+  .ck-count{font:600 11px/1 ui-monospace,monospace;color:var(--dim)}
+  .ck-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+  .ck-list li{display:flex;align-items:center;gap:7px}
+  .ck-box{width:20px;height:20px;flex:0 0 auto;border:1.5px solid var(--line);border-radius:5px;background:transparent;color:#7ed957;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .ck-box.on{background:rgba(126,217,87,.16);border-color:#7ed957}
+  .ck-t{font-size:12px}
+  .ck-done .ck-t{color:var(--dim);text-decoration:line-through}
+  .ck-add{margin-top:8px;background:transparent;border:1px dashed var(--line);border-radius:6px;color:var(--cool);padding:5px 10px;font:600 11px/1 "Helvetica Neue";cursor:pointer}
+  .ck-add:hover{border-color:var(--cool)}
+  /* race director */
+  .dir-intro{color:var(--muted);font-size:13px;line-height:1.55;max-width:780px;margin:0 0 18px}
+  .dir-intro b{color:var(--paint)} .dir-intro code{background:var(--asphalt-2);padding:1px 5px;border-radius:4px;font-size:12px;color:var(--cool)}
+  .dir-grid{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 18px}
+  .dir-field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:240px}
+  .dir-field-sm{flex:0 0 120px;min-width:120px}
+  .dir-field label{font-size:12px;color:var(--paint);font-weight:600}
+  .dir-hint{color:var(--dim);font-weight:400;font-size:11px}
+  .dir-wide,.dir-name,.dir-num,.dir-drv{background:#16181d;border:1px solid var(--line);border-radius:6px;color:var(--paint);padding:7px 9px;font:500 13px/1 "Helvetica Neue"}
+  .dir-wide{width:100%}
+  .dir-num{width:64px;text-align:center}
+  .dir-tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:9px;background:var(--asphalt-2);margin:0 0 12px}
+  .dir-table{border-collapse:collapse;width:100%;font-size:13px}
+  .dir-table th{text-align:left;padding:9px 11px;color:var(--dim);font-weight:600;font-size:11px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .dir-table td{padding:7px 11px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+  .dir-name{width:150px} .dir-kart{background:#16181d;border:1px solid var(--line);border-radius:6px;color:var(--paint);padding:6px 8px;font-size:13px}
+  .dir-drvcell{display:flex;gap:6px;flex-wrap:wrap}
+  .dir-drv{width:118px;font-size:12px}
+  .dir-x{background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:14px;padding:4px 7px;border-radius:5px}
+  .dir-x:hover{background:rgba(255,90,60,.14);color:#ff6b6b}
+  .dir-actions{display:flex;gap:10px;align-items:center;margin:0 0 18px}
+  .dir-add{background:transparent;border:1px dashed var(--line);border-radius:7px;color:var(--cool);padding:8px 14px;font:600 12px/1 "Helvetica Neue";cursor:pointer}
+  .dir-add:hover{border-color:var(--cool);background:rgba(78,197,232,.07)}
+  .dir-quick{margin:0 0 16px;border:1px solid var(--line);border-radius:9px;background:var(--asphalt-2);overflow:hidden}
+  .dir-quick summary{padding:11px 14px;cursor:pointer;font-size:13px;color:var(--paint);user-select:none}
+  .dir-quick summary code{background:#16181d;padding:1px 6px;border-radius:4px;color:var(--cool);font-size:12px}
+  .dir-quickbody{padding:0 14px 14px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+  #dirQuick{width:100%;min-height:84px;background:#16181d;border:1px solid var(--line);border-radius:7px;color:var(--paint);padding:10px;font:500 13px/1.5 ui-monospace,monospace;resize:vertical}
+  .dir-errbox{margin:0 0 12px} .dir-err-line{color:#ff8a7a;font-size:13px;padding:3px 0}
+  .dir-gen{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .dir-generate{background:linear-gradient(135deg,var(--hot),#ff8a3c);border:none;border-radius:8px;color:#1a1205;padding:12px 22px;font:700 14px/1 "Helvetica Neue";cursor:pointer;box-shadow:0 2px 12px rgba(255,90,60,.3)}
+  .dir-generate:hover{filter:brightness(1.08)}
+  /* kart detektiv */
+  .dt-intro{color:var(--muted);font-size:13px;line-height:1.5;max-width:760px;margin:0 0 14px}
+  .dt-intro b{color:var(--paint)}
+  .dt-confbar{display:flex;align-items:center;gap:14px;margin:0 0 14px;flex-wrap:wrap}
+  .dt-conflabel{font-size:13px;color:var(--paint)}
+  .dt-conflabel b{color:var(--hot);font-size:15px}
+  .dt-conftrack{flex:1;min-width:160px;height:8px;background:var(--line);border-radius:5px;overflow:hidden}
+  .dt-conffill{height:100%;background:linear-gradient(90deg,var(--hot),#f4d03f);border-radius:5px;transition:width .3s}
+  button.ghost.sm{font-size:12px;padding:4px 10px}
+  .dt-pool{font-size:12px;color:var(--muted);margin:0 0 12px}
+  .dt-poolnote{color:var(--dim)}
+  .kchip{display:inline-block;padding:2px 7px;margin:2px;border:1px solid var(--line);border-radius:5px;font:600 11px/1 ui-monospace,monospace;color:var(--paint)}
+  .dt-tablewrap{overflow-x:auto}
+  .dt-table{border-collapse:collapse;font-size:12px;min-width:100%}
+  .dt-table th{text-align:left;padding:8px 10px;color:var(--dim);font-weight:600;border-bottom:1px solid var(--line);white-space:nowrap}
+  .dt-table td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top}
+  .dt-table td.dt-team{font-weight:600;color:var(--paint);white-space:nowrap}
+  .dt-cell{min-width:120px}
+  .dt-cell.is-solved{background:rgba(126,217,87,.06)}
+  .dt-cell.is-grid{background:rgba(78,197,232,.06)}
+  .dt-set{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+  .kk{font:600 12px/1 ui-monospace,monospace}
+  .kk.solved{color:#7ed957}
+  .kk.solved.given{color:#4ec5e8}
+  .kk.multi{color:var(--muted);font-size:11px}
+  .ktruth{font:600 10px/1 ui-monospace,monospace;padding:1px 5px;border-radius:4px}
+  .ktruth.ok{background:rgba(126,217,87,.18);color:#7ed957}
+  .ktruth.no{background:rgba(255,107,107,.18);color:#ff6b6b}
+  .dt-grid{font-size:10px;color:#4ec5e8;opacity:.7}
+  .dt-pick{background:var(--panel,#15171c);border:1px solid var(--line);color:var(--paint);border-radius:5px;font-size:11px;padding:2px 4px;max-width:84px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  .paddock-box{fill:rgba(40,44,54,.45);stroke:#2f3440;stroke-width:1}
+  .paddock-cap{fill:var(--dim);font:800 7px/1 "Helvetica Neue";letter-spacing:.14em;text-anchor:middle}
+  .paddock-slot{fill:#3a4150}
+  .car.pitting circle{animation:pitpulse .7s ease-in-out infinite}
+  @keyframes pitpulse{0%,100%{stroke:#0b0d11;stroke-width:2}50%{stroke:#f4d03f;stroke-width:3.5}}
+  .trk-raceline{fill:none;stroke:var(--cool);stroke-width:1.5;stroke-dasharray:5 6;opacity:.34}
+  .rp-labels{display:flex;align-items:center;gap:6px;margin:14px 0 4px;flex-wrap:wrap}
+  .rp-lbltitle{font:700 10px/1 "Helvetica Neue";letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-right:2px}
+  .rp-lblbtn{background:#0f1115;border:1px solid var(--line);color:var(--muted);border-radius:5px;
+    font:600 11px/1 "Helvetica Neue";padding:6px 10px;cursor:pointer}
+  .rp-lblbtn:hover{border-color:var(--cool);color:var(--paint)}
+  .rp-lblbtn.on{background:var(--cool);border-color:var(--cool);color:#06121f;font-weight:700}
+  .apex-dot{fill:var(--hot);stroke:#0b0d11;stroke-width:1.5}
+  .apex-num{fill:#fff;font:700 8.5px/1 "Helvetica Neue";text-anchor:middle}
+  .trk-start{stroke:#f4f4f1;stroke-width:3;stroke-dasharray:3 2}
+  .car circle{filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+  .carlabel{fill:var(--paint);font:700 10px/1 "Helvetica Neue";paint-order:stroke;stroke:#0b0d11;stroke-width:3px}
+  .replay-side{padding:14px}
+  .rp-clock{font:800 22px/1 "SF Mono",Menlo,monospace;color:var(--paint);margin-bottom:4px}
+  .rp-clocksub{font:500 11px/1 "Helvetica Neue";color:var(--dim);margin-left:6px}
+  .rp-order{margin-top:14px;display:flex;flex-direction:column;gap:2px}
+  .rp-row{display:flex;align-items:center;gap:8px;padding:6px 6px;border-radius:5px;font:600 12px/1 "Helvetica Neue"}
+  .rp-row:nth-child(odd){background:#16181d}
+  .rp-row.fin{opacity:.55}
+  .rp-pos{width:18px;color:var(--dim);font-weight:800;text-align:center}
+  .rp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .rp-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rp-lap{color:var(--muted);font-variant-numeric:tabular-nums;font-size:11px}
+  .rp-gap{color:var(--dim);font-variant-numeric:tabular-nums;font-size:11px;min-width:54px;text-align:right}
+  .rp-row.p1{background:rgba(232,93,40,.14);box-shadow:inset 2px 0 0 var(--hot)}
+  .rp-gap.lead{color:var(--hot);font-weight:800}
+  .replay-controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:16px;padding:14px 18px}
+  .rp-play{background:var(--hot);color:#fff;border:none;border-radius:7px;font:700 13px/1 "Helvetica Neue";letter-spacing:.04em;padding:11px 20px;cursor:pointer;min-width:104px}
+  .rp-play:hover{filter:brightness(1.12)}
+  .rp-btn{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;font:600 12px/1 "Helvetica Neue";padding:10px 14px;cursor:pointer}
+  .rp-btn:hover{border-color:var(--cool);color:var(--paint)}
+  .rp-speedwrap{flex:1;min-width:220px;display:flex;flex-direction:column;gap:5px}
+  .rp-spdlabel{font:600 12px/1 "Helvetica Neue";color:var(--muted)}
+  .rp-spdlabel b{color:var(--cool);font:800 14px/1 "SF Mono",monospace;margin-left:4px}
+  .rp-slider,.rp-seek{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:#0f1115;border:1px solid var(--line);outline:none}
+  .rp-slider::-webkit-slider-thumb,.rp-seek::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--cool);cursor:pointer;border:2px solid #0b0d11}
+  .rp-slider::-moz-range-thumb,.rp-seek::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--cool);cursor:pointer;border:2px solid #0b0d11}
+  .rp-seek::-webkit-slider-thumb{background:var(--paint)}
+  .rp-seek::-moz-range-thumb{background:var(--paint)}
+  .rp-spdticks{display:flex;justify-content:space-between;font:500 9px/1 "Helvetica Neue";color:var(--dim)}
+  .rp-seekwrap{flex-basis:100%}
+
+  /* ---- virtual mode ---- */
+  .vmode{display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+  .vtoggle{display:flex;align-items:center;gap:8px;font:700 12px/1 "Helvetica Neue";letter-spacing:.06em;text-transform:uppercase;color:var(--cool);cursor:pointer}
+  .vtoggle input{width:16px;height:16px;accent-color:var(--cool);cursor:pointer}
+  .vctl,.vquick{display:flex;align-items:center;gap:8px;font:600 12px/1 "Helvetica Neue";color:var(--muted)}
+  .vctl b{color:var(--paint);font:800 16px/1 "Helvetica Neue";min-width:18px;text-align:center}
+  .step{background:#0f1115;border:1px solid var(--line);color:var(--paint);padding:5px 11px;font:700 14px/1 "Helvetica Neue";border-radius:5px}
+  .step:hover{border-color:var(--cool)}
+  .chip{background:transparent;border:1px solid var(--line);color:var(--muted);padding:6px 10px;font:600 10px/1 "Helvetica Neue";letter-spacing:.04em;text-transform:uppercase;border-radius:5px}
+  .chip:hover{border-color:var(--cool);color:var(--paint)}
+  .vexplain{flex-basis:100%;color:var(--dim);font:500 12px/1.5 "Helvetica Neue"}
+  .vbadge{display:inline-block;background:rgba(62,167,255,.16);color:var(--cool);font:700 10px/1 "Helvetica Neue";letter-spacing:.1em;text-transform:uppercase;padding:5px 9px;border-radius:5px;margin-left:10px;vertical-align:middle}
+  .delta-up{color:var(--good);font-weight:700}
+  .delta-dn{color:var(--kerb);font-weight:700}
+  .delta-eq{color:var(--dim)}
+
+  /* ---- stints ---- */
+  .stintwrap{display:grid;gap:14px}
+  .stintrow{background:var(--asphalt-2);border:1px solid var(--line);border-radius:9px;padding:14px 16px}
+  .stintrow h4{font:700 13px/1 "Helvetica Neue";margin-bottom:12px;display:flex;align-items:center;gap:9px}
+  .stints{display:flex;flex-wrap:wrap;gap:8px}
+  .stint{flex:1 1 130px;min-width:120px;background:#0f1115;border:1px solid var(--line);border-radius:7px;padding:9px 11px;border-left:3px solid var(--dim)}
+  .stint.ace{border-left-color:var(--hot)}
+  .stint.core{border-left-color:var(--cool)}
+  .stint.backup{border-left-color:var(--warn)}
+  .stint .si{font:700 9px/1 "Helvetica Neue";letter-spacing:.1em;text-transform:uppercase;color:var(--dim);display:flex;justify-content:space-between}
+  .stint .si .tier{color:var(--paint)}
+  .stint .sm{font:800 17px/1.1 "Helvetica Neue";margin:7px 0 2px;font-variant-numeric:tabular-nums}
+  .stint .sd{font:500 11px/1.3 "Helvetica Neue";color:var(--muted)}
+  .stint .sdur{font:600 11px/1.3 "Helvetica Neue";color:var(--cool);margin-top:3px;font-variant-numeric:tabular-nums}
+  .drv-in{width:100%;margin:8px 0 2px;background:#16181d;border:1px solid var(--line);border-radius:5px;color:var(--paint);
+    font:600 12px/1 "Helvetica Neue";padding:6px 8px}
+  .drv-in:focus{outline:none;border-color:var(--cool)}
+  .drv-in::placeholder{color:var(--dim);font-weight:500}
+  .krt-in{width:100%;margin:5px 0 2px;background:#16181d;border:1px solid var(--line);border-radius:5px;color:var(--cool);
+    font:700 12px/1 "SF Mono",Menlo,monospace;padding:6px 8px}
+  .krt-in:focus{outline:none;border-color:var(--cool)}
+  .krt-in::placeholder{color:var(--dim);font-weight:500;font-family:"Helvetica Neue"}
+  .modelnote{font:500 13px/1.5 "Helvetica Neue";padding:11px 14px;border-radius:8px;margin-bottom:14px}
+  .modelnote.ok{background:rgba(61,220,145,.10);border:1px solid rgba(61,220,145,.3);color:var(--paint)}
+  .modelnote.warn{background:rgba(255,194,60,.08);border:1px solid rgba(255,194,60,.3);color:var(--paint)}
+  .modelnote b{color:var(--good)}
+  .modelnote.warn b{color:var(--warn)}
+  .tierkey{display:flex;gap:16px;font:600 11px/1 "Helvetica Neue";color:var(--muted);margin-bottom:14px}
+  .tierkey span{display:flex;align-items:center;gap:6px}
+  .tierkey i{width:10px;height:10px;border-radius:2px;display:inline-block}
+  .taghint{color:var(--dim);font:500 12px/1.5 "Helvetica Neue";margin-bottom:14px}
+  .taghint b{color:var(--cool)}
+
+  /* ---- driver leaderboard ---- */
+  .lb-rank{font:800 16px/1 "Helvetica Neue";color:var(--dim);width:26px;display:inline-block}
+  .lb-rank.p1{color:var(--hot)} .lb-rank.p2{color:var(--paint)} .lb-rank.p3{color:var(--warn)}
+  .lb-name{font:700 14px/1.2 "Helvetica Neue"}
+  .lb-team{font:500 11px/1.2 "Helvetica Neue";color:var(--dim)}
+  .lb-tier{font:700 9px/1 "Helvetica Neue";letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:4px}
+  .lb-empty{color:var(--dim);font:500 13px/1.6 "Helvetica Neue";text-align:center;padding:30px 16px;border:1px dashed var(--line);border-radius:8px}
+  .reco{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid #23262e;font:500 14px/1.5 "Helvetica Neue"}
+  .reco:last-child{border:none}
+  .reco .mk{flex-shrink:0;font:800 11px/1.5 "Helvetica Neue";width:64px;letter-spacing:.06em;text-transform:uppercase}
+  .reco b{color:var(--paint)} .reco em{color:var(--muted);font-style:normal}
+
+  /* ---- raw lap table ---- */
+  .laptable-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:9px;background:var(--asphalt-2)}
+  table.laps{min-width:max-content}
+  table.laps th{position:sticky;top:0;background:var(--asphalt-2)}
+  table.laps td,table.laps th{padding:6px 12px;font-size:12px}
+  table.laps td.lapno{color:var(--dim);font-weight:700;text-align:left;position:sticky;left:0;background:var(--asphalt-2)}
+  table.laps th.lapno{text-align:left;position:sticky;left:0;z-index:2}
+  td.pit{color:var(--cool);font-style:italic}
+  td.inc{color:var(--kerb);font-weight:700}
+  td.fast{color:var(--hot);font-weight:700}
+  .lapfilter{display:flex;gap:8px;margin-bottom:12px;align-items:center;font:600 12px/1 "Helvetica Neue";color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Kartbahn Wohlen · 825 m · Turbo Kart</div>
+    <h1>2H GP — Race Analysis</h1>
+    <div class="meta">After-Action Review engine · five views over one race · edit any value to explore <b>what-if</b> scenarios <span id="vGlobalBadge"></span></div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-view="data" onclick="showView('data')">Data</button>
+    <button class="tab" data-view="director" onclick="showView('director')">Director</button>
+    <button class="tab" data-view="product" onclick="showView('product')">Product</button>
+    <button class="tab" data-view="race" onclick="showView('race')">Race</button>
+    <button class="tab" data-view="team" onclick="showView('team')">Team</button>
+    <button class="tab" data-view="driver" onclick="showView('driver')">Driver</button>
+    <button class="tab" data-view="kart" onclick="showView('kart')">Kart</button>
+    <button class="tab" data-view="detektiv" onclick="showView('detektiv')">Detektiv</button>
+    <button class="tab" data-view="replay" onclick="showView('replay')">Replay</button>
+  </nav>
+
+  <!-- DATA VIEW -->
+  <div class="view active" id="view-data">
+    <div class="intake">
+      <h2>Lap data intake</h2>
+      <textarea id="raw" spellcheck="false"></textarea>
+      <div class="controls">
+        <button onclick="ingest()">Analyse</button>
+        <button class="ghost real" onclick="loadRealRace()">Load real race · 28.06.2026</button>
+        <span class="demo-gen">
+          <button class="ghost" onclick="loadDemo()">Generate demo</button>
+          <label class="teamsel">with
+            <select id="demoTeams">
+              <option>3</option><option selected>4</option><option>5</option>
+              <option>6</option><option>8</option><option>10</option><option>12</option><option>17</option>
+            </select> teams
+          </label>
+        </span>
+        <button class="ghost" onclick="clearAll()">Clear</button>
+        <span class="hint">One line per kart: <code>Name: 53.4, 54.1, 1:02.8 …</code> — or <code>Kart,Lap,Time</code> rows. The real race is the official 28.06.2026 Wohlen timing (5 teams, karts #54/#55/#69/#63/#64).</span>
+      </div>
+    </div>
+    <div id="data-panel"><div class="empty">No data yet. Paste lap times or load the demo race.</div></div>
+  </div>
+
+  <!-- DIRECTOR VIEW -->
+  <div class="view" id="view-director"></div>
+  <div class="view" id="view-product"></div>
+
+  <!-- RACE VIEW -->
+  <div class="view" id="view-race"><div class="empty">Ingest a race first.</div></div>
+  <!-- TEAM VIEW -->
+  <div class="view" id="view-team"><div class="empty">Ingest a race first.</div></div>
+  <!-- DRIVER VIEW -->
+  <div class="view" id="view-driver"><div class="empty">Ingest a race first.</div></div>
+  <!-- KART VIEW -->
+  <div class="view" id="view-kart"><div class="empty">Ingest a race first.</div></div>
+  <div class="view" id="view-detektiv"><div class="empty">Ingest a race first.</div></div>
+  <!-- REPLAY VIEW -->
+  <div class="view" id="view-replay"><div class="empty">Ingest a race first.</div></div>
+
+  <div class="foot">
+    Metrics: best lap · median pace · clean mean · consistency (σ &amp; CoV) · degradation (s/lap) · stint splits · kart/driver decomposition · gap-to-leader. Outliers use median ± 1.5·IQR. Edit any lap, driver, or kart to enter <b>virtual mode</b>; reset in the Data view to return to the official result.
+  </div>
+</div>
+
+<script>
+const FMT = t => {
+  if(t==null||isNaN(t)) return "—";
+  const m=Math.floor(t/60), s=t-m*60;
+  return m>0 ? `${m}:${s.toFixed(3).padStart(6,"0")}` : s.toFixed(3);
+};
+// stint duration as m:ss (no decimals) — stints run ~18–25 min
+const fmtDuration = t => {
+  if(t==null||isNaN(t)) return "—";
+  const m=Math.floor(t/60), s=Math.round(t-m*60);
+  const mm = s===60 ? m+1 : m, ss = s===60 ? 0 : s;
+  return `${mm}:${String(ss).padStart(2,"0")} min`;
+};
+const PAL=["#ff5a3c","#3ea7ff","#3ddc91","#ffc23c","#b07cff","#ff7eb6","#5ce0d8","#f0844a","#9aa0ff","#7ad14e"];
+
+function parseTime(str){
+  str=str.trim(); if(!str) return null;
+  if(str.includes(":")){const[m,s]=str.split(":");return (+m)*60+parseFloat(s);}
+  const v=parseFloat(str); return isNaN(v)?null:v;
+}
+
+function parseInput(text){
+  const lines=text.split("\n").map(l=>l.trim()).filter(Boolean);
+  const karts={};
+  // detect CSV-style "Kart,Lap,Time"
+  const csvLike=lines.filter(l=>l.split(/[,;]/).length===3 && !l.includes(":")|| (l.split(/[,;\t]/).length>=3 && /lap/i.test(lines[0]||"")));
+  const looksCsv=lines.length>1 && lines.every(l=>{const p=l.split(/[,;\t]/);return p.length===3;}) && /lap/i.test(lines[0]);
+  if(looksCsv){
+    for(let i=1;i<lines.length;i++){
+      const[k,,t]=lines[i].split(/[,;\t]/).map(x=>x.trim());
+      const v=parseTime(t); if(v==null)continue;
+      (karts[k]=karts[k]||[]).push(v);
+    }
+    return karts;
+  }
+  // "Name: t, t, t"
+  for(const line of lines){
+    let name, rest;
+    if(line.includes(":") && /[a-zA-Z]/.test(line.split(":")[0].replace(/\s/g,""))){
+      const idx=line.indexOf(":"); name=line.slice(0,idx).trim(); rest=line.slice(idx+1);
+    } else { name="Kart "+(Object.keys(karts).length+1); rest=line; }
+    const times=rest.split(/[,; \t]+/).map(parseTime).filter(v=>v!=null);
+    if(times.length) (karts[name]=karts[name]||[]).push(...times);
+  }
+  return karts;
+}
+
+const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const median=a=>{const s=[...a].sort((x,y)=>x-y);const m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2;};
+const std=a=>{if(a.length<2)return 0;const m=mean(a);return Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/(a.length-1));};
+function quartiles(a){const s=[...a].sort((x,y)=>x-y);const q=p=>{const i=(s.length-1)*p,lo=Math.floor(i);return s[lo]+(s[Math.ceil(i)]-s[lo])*(i-lo);};return[q(.25),q(.5),q(.75)];}
+
+function cleanLaps(times){ // remove pit/traffic outliers via IQR on slow side
+  if(times.length<4) return {clean:times,out:[]};
+  const[,q2,q3]=quartiles(times),[q1]=quartiles(times),iqr=q3-q1;
+  const hi=q3+1.5*iqr, lo=q1-1.5*iqr;
+  const clean=[],out=[];
+  times.forEach((t,i)=>{(t>hi||t<lo?out:clean).push(t>hi||t<lo?{lap:i+1,t}:t);});
+  return {clean,out};
+}
+
+function degradation(times){ // linear slope over lap index (clean laps), s/lap
+  if(times.length<3)return 0;
+  const n=times.length, xs=times.map((_,i)=>i+1);
+  const mx=mean(xs),my=mean(times);
+  let num=0,den=0;
+  for(let i=0;i<n;i++){num+=(xs[i]-mx)*(times[i]-my);den+=(xs[i]-mx)**2;}
+  return den?num/den:0;
+}
+
+// Split a lap list into stints. A pit/out-lap is a lap notably slower than the
+// team's clean median (driver change ~64-72s vs ~53-54s racing). We break there.
+function splitStints(laps){
+  if(!laps.length) return [];
+  // baseline = racing pace (clean laps only), so pit laps don't inflate the threshold
+  const racingMed=median(cleanLaps(laps).clean.length?cleanLaps(laps).clean:laps);
+  // Discard a standing-start "lap 0" (the grid-crossing, far shorter than a racing
+  // lap) so it never pollutes the first stint's pace. Detect it as a first lap well
+  // under half the racing median, then offset all lap indices by 1.
+  const gridLap = laps.length>3 && laps[0] < racingMed*0.5;
+  const startOff = gridLap ? 1 : 0;
+  const work = gridLap ? laps.slice(1) : laps;
+  const pitThreshold=racingMed*1.35; // ≈ +35% over racing pace: above the worst incident (~+12s) but below the 79–82s driver-change lap
+  const stints=[]; let cur=[]; let curStart=1+startOff;
+  work.forEach((t,i)=>{
+    if(t>pitThreshold && cur.length>=3){
+      stints.push({laps:cur,start:curStart,end:i+startOff,pitOut:t});
+      cur=[]; curStart=i+2+startOff; // next stint starts after the pit lap
+    } else {
+      cur.push(t);
+    }
+  });
+  if(cur.length) stints.push({laps:cur,start:curStart,end:laps.length});
+  return stints.map((s,i)=>{
+    const cl=cleanLaps(s.laps).clean;
+    const racing=cl.length?cl:s.laps;
+    return {
+      idx:i+1, n:s.laps.length, start:s.start, end:s.end,
+      best:Math.min(...s.laps), median:median(racing), mean:mean(racing),
+      std:std(racing), cov:racing.length>1?std(racing)/mean(racing)*100:0,
+      duration:s.laps.reduce((a,b)=>a+b,0),   // total time on track this stint
+      laps:s.laps
+    };
+  });
+}
+
+// Classify each stint's driver by pace tier relative to the whole field's stints.
+function classifyStints(data){
+  const all=[];
+  data.forEach(t=>t.stints.forEach(s=>all.push(s.median)));
+  if(!all.length) return;
+  const fast=quartiles(all)[0], slow=quartiles(all)[2]; // Q1 / Q3 of stint medians
+  data.forEach(t=>t.stints.forEach(s=>{
+    s.tier = s.median<=fast ? "Ace" : s.median>=slow ? "Backup" : "Core";
+  }));
+}
+
+// driverTags: { "TeamName": ["Driver 1",...] }  ·  kartTags: { "TeamName": ["50","63",...] }
+// both indexed by stint order. A stint is a (driver × kart) tuple.
+let driverTags={}, kartTags={};
+function driverFor(team,stintIdx){
+  const t=driverTags[team];
+  return (t&&t[stintIdx]) ? t[stintIdx] : `${team} · Seat ${stintIdx+1}`;
+}
+function kartFor(team,stintIdx){
+  const t=kartTags[team];
+  return (t&&t[stintIdx]) ? t[stintIdx] : null;
+}
+function setDriver(team,stintIdx,name){driverTags[team]=driverTags[team]||[];driverTags[team][stintIdx]=name.trim();}
+function setKart(team,stintIdx,no){kartTags[team]=kartTags[team]||[];kartTags[team][stintIdx]=no.trim();}
+
+// Two-way additive decomposition: stint_median ≈ grand + kartEffect + driverEffect.
+// Solved by iterative mean-removal (alternating projections) — converges fast and is
+// robust for the unbalanced, sparse design a rotating-kart race produces.
+// Needs each stint tagged with BOTH a driver and a kart, with enough crossover
+// (drivers sharing karts) to be identifiable.
+function estimateEffects(data){
+  const obs=[]; // {driver, kart, y}
+  data.forEach(t=>t.stints.forEach((s,i)=>{
+    const drv=driverFor(t.name,i), krt=kartFor(t.name,i);
+    if(krt) obs.push({driver:drv, kart:krt, y:s.median});
+  }));
+  if(obs.length<2) return null;
+  const grand=mean(obs.map(o=>o.y));
+  const drivers=[...new Set(obs.map(o=>o.driver))];
+  const karts=[...new Set(obs.map(o=>o.kart))];
+  const dEff={}, kEff={};
+  drivers.forEach(d=>dEff[d]=0); karts.forEach(k=>kEff[k]=0);
+  // alternate: hold kart effects, fit driver effects as residual means; then swap. repeat.
+  for(let iter=0;iter<200;iter++){
+    // driver effects = mean residual after removing grand + kart
+    drivers.forEach(d=>{
+      const r=obs.filter(o=>o.driver===d).map(o=>o.y-grand-kEff[o.kart]);
+      dEff[d]=r.length?mean(r):0;
+    });
+    // kart effects = mean residual after removing grand + driver
+    karts.forEach(k=>{
+      const r=obs.filter(o=>o.kart===k).map(o=>o.y-grand-dEff[o.driver]);
+      kEff[k]=r.length?mean(r):0;
+    });
+  }
+  // center kart effects to 0 mean (identifiability), fold offset into drivers so
+  // driver pace = expected lap in an AVERAGE kart.
+  const kMean=mean(karts.map(k=>kEff[k]));
+  karts.forEach(k=>kEff[k]-=kMean);
+  drivers.forEach(d=>dEff[d]+=kMean);
+  // residual quality: how much variance the model explains
+  let ssTot=0,ssRes=0;
+  obs.forEach(o=>{const pred=grand+kEff[o.kart]+dEff[o.driver];ssTot+=(o.y-grand)**2;ssRes+=(o.y-pred)**2;});
+  return {grand,dEff,kEff,r2:ssTot?1-ssRes/ssTot:0,nObs:obs.length,
+    crossover: drivers.length+karts.length<=obs.length};
+}
+
+// Roll every stint up by driver name across the whole field.
+function driverLeaderboard(data){
+  const eff=estimateEffects(data);
+  const drivers={};
+  data.forEach(t=>t.stints.forEach((s,i)=>{
+    const name=driverFor(t.name,i);
+    const d=drivers[name]=drivers[name]||{name,team:t.name,color:t.color,stints:[],allLaps:[],karts:[]};
+    d.stints.push(s);
+    const krt=kartFor(t.name,i); if(krt)d.karts.push(krt);
+    const racing=cleanLaps(s.laps).clean;
+    d.allLaps.push(...(racing.length?racing:s.laps));
+  }));
+  const rows=Object.values(drivers).map(d=>({
+    name:d.name, team:d.team, color:d.color,
+    karts:[...new Set(d.karts)],
+    stints:d.stints.length, laps:d.allLaps.length,
+    best:Math.min(...d.allLaps),
+    median:median(d.allLaps), mean:mean(d.allLaps),
+    std:std(d.allLaps), cov:d.allLaps.length>1?std(d.allLaps)/mean(d.allLaps)*100:0,
+    deg:degradation(d.allLaps),
+    // kart-adjusted pace = expected lap in an AVERAGE kart (driver skill, kart luck removed)
+    adj: eff && eff.dEff[d.name]!=null ? eff.dEff[d.name] : null
+  }));
+  rows._eff=eff; // attach for the kart table + diagnostics
+  // rank on kart-adjusted pace when we have it, else raw median
+  const useAdj = eff && rows.every(r=>r.adj!=null);
+  rows._useAdj=useAdj;
+  const key = useAdj ? (r=>r.adj) : (r=>r.median);
+  rows.sort((a,b)=>key(a)-key(b));
+  rows.forEach((r,i)=>r.rank=i+1);
+  const vals=rows.map(key);
+  const fast=quartiles(vals)[0], slow=quartiles(vals)[2];
+  rows.forEach(r=>r.tier = key(r)<=fast?"Ace":key(r)>=slow?"Backup":"Core");
+  return rows;
+}
+
+// Kart leaderboard — the recovered hidden pace ratings, fastest first.
+function kartLeaderboard(data){
+  const eff=estimateEffects(data);
+  if(!eff) return null;
+  // also gather raw usage stats per kart
+  const use={};
+  data.forEach(t=>t.stints.forEach((s,i)=>{
+    const k=kartFor(t.name,i); if(!k)return;
+    const u=use[k]=use[k]||{kart:k,stints:0,drivers:new Set(),laps:[]};
+    u.stints++; u.drivers.add(driverFor(t.name,i));
+    const r=cleanLaps(s.laps).clean; u.laps.push(...(r.length?r:s.laps));
+  }));
+  const rows=Object.keys(eff.kEff).map(k=>({
+    kart:k, effect:eff.kEff[k],
+    stints:use[k]?use[k].stints:0,
+    drivers:use[k]?use[k].drivers.size:0,
+    rawMedian:use[k]&&use[k].laps.length?median(use[k].laps):null
+  }));
+  rows.sort((a,b)=>a.effect-b.effect); // most negative = fastest kart
+  rows.forEach((r,i)=>r.rank=i+1);
+  rows._eff=eff;
+  return rows;
+}
+
+function analyse(karts,dropSlowest=0){
+  const data=Object.entries(karts).map(([name,laps],i)=>{
+    const stints=splitStints(laps);
+    // virtual mode: remove each team's slowest N laps for the virtual total
+    let vLaps=laps, removed=[];
+    if(dropSlowest>0){
+      const sorted=laps.map((t,idx)=>({t,idx})).sort((a,b)=>b.t-a.t);
+      removed=sorted.slice(0,Math.min(dropSlowest,laps.length)).map(x=>x.t);
+      const removeIdx=new Set(sorted.slice(0,dropSlowest).map(x=>x.idx));
+      vLaps=laps.filter((_,idx)=>!removeIdx.has(idx));
+    }
+    const{clean,out}=cleanLaps(laps);
+    // A standing-start race has a grid-crossing "lap 0" that is far shorter than a
+    // racing lap (the car crosses the line a few metres after the start). It is not
+    // a real lap — exclude it from best-lap and racing stats. Detect it as a first
+    // lap well under half the racing median.
+    const racingMedAll=median(clean.length?clean:laps);
+    const hasGridLap = laps.length>3 && laps[0] < racingMedAll*0.5;
+    const racingLaps = hasGridLap ? laps.slice(1) : laps;
+    const best=Math.min(...racingLaps);
+    const cl=clean.length?clean:laps;
+    return{
+      name,color:PAL[i%PAL.length],laps,n:hasGridLap?laps.length-1:laps.length,
+      hasGridLap,
+      best,median:median(cl),mean:mean(cl),
+      std:std(cl),cov:std(cl)/mean(cl)*100,
+      deg:degradation(cl),
+      total:laps.reduce((x,y)=>x+y,0),
+      vTotal:vLaps.reduce((x,y)=>x+y,0), vN:vLaps.length, removed,
+      out,clean:cl, stints
+    };
+  });
+  classifyStints(data);
+  // virtual mode ranks on virtual total over the SAME lap count basis (laps-dropped each)
+  const rankTotal = dropSlowest>0 ? (d=>d.vTotal) : (d=>d.total);
+  const maxLaps=Math.max(...data.map(d=>dropSlowest>0?d.vN:d.n));
+  data.forEach(d=>d.lapsDown=maxLaps-(dropSlowest>0?d.vN:d.n));
+  data.sort((a,b)=> a.lapsDown-b.lapsDown || rankTotal(a)-rankTotal(b));
+  data.forEach((d,i)=>d.pos=i+1);
+  const leader=data[0];
+  data.forEach(d=>d.gap = d.lapsDown>0 ? `+${d.lapsDown} L` : (d===leader?"—":"+"+(rankTotal(d)-rankTotal(leader)).toFixed(1)+"s"));
+  const fieldBest=Math.min(...data.map(d=>d.best));
+  data.forEach(d=>d.gapBest=d.best-fieldBest);
+  return data;
+}
+
+function renderStints(d){
+  const tierColor={Ace:"var(--hot)",Core:"var(--cool)",Backup:"var(--warn)"};
+  const html=d.map(t=>{
+    const aces=t.stints.filter(s=>s.tier==="Ace").length;
+    const weak=t.stints.filter(s=>s.tier==="Backup").length;
+    const summary = aces>weak ? `<span class="tag t-fast">strong driver pool</span>`
+                  : weak>aces ? `<span class="tag t-deg">weak link present</span>`
+                  : `<span class="tag t-cons">balanced lineup</span>`;
+    const cells=t.stints.map((s,i)=>`
+      <div class="stint ${s.tier.toLowerCase()}">
+        <div class="si"><span>Stint ${s.idx} · ${s.n}L</span><span class="tier" style="color:${tierColor[s.tier]}">${s.tier}</span></div>
+        <input class="drv-in" value="${driverTags[t.name]&&driverTags[t.name][i]?driverTags[t.name][i].replace(/"/g,'&quot;'):''}" placeholder="Driver…"
+          onchange="setDriver('${t.name.replace(/'/g,"\\'")}',${i},this.value);rerender()">
+        <input class="krt-in" value="${kartTags[t.name]&&kartTags[t.name][i]?kartTags[t.name][i].replace(/"/g,'&quot;'):''}" placeholder="Kart #"
+          onchange="setKart('${t.name.replace(/'/g,"\\'")}',${i},this.value);rerender()">
+        <div class="sm">${FMT(s.median)}</div>
+        <div class="sd">best ${FMT(s.best)} · σ${s.std.toFixed(2)} · L${s.start}–${s.end}</div>
+        <div class="sdur">⏱ ${fmtDuration(s.duration)}</div>
+      </div>`).join("");
+    return `<div class="stintrow">
+      <h4><span class="swatch" style="background:${t.color}"></span>${t.name} <span style="color:var(--dim);font-weight:500">· ${t.stints.length} stints</span> ${summary}</h4>
+      <div class="stints">${cells}</div>
+    </div>`;
+  }).join("");
+  document.getElementById("stints").innerHTML=
+    `<div class="taghint">Tag each stint with its <b>driver</b> and <b>kart #</b>. Karts rotate through teams, so the same kart appears under different drivers — that crossover lets the analysis separate <b>driver skill</b> from <b>kart pace</b>.</div><div class="tierkey"><span><i style="background:var(--hot)"></i>Ace — fastest quartile</span><span><i style="background:var(--cool)"></i>Core — mid pack</span><span><i style="background:var(--warn)"></i>Backup — slowest quartile</span></div><div class="stintwrap">${html}</div>`;
+}
+
+function renderLeaderboard(data){
+  const rows=driverLeaderboard(data);
+  const el=document.getElementById("leaderboard");
+  const anyTagged=data.some(t=>driverTags[t.name]&&driverTags[t.name].some(Boolean));
+  if(!anyTagged){
+    el.innerHTML=`<div class="lb-empty">Tag drivers (and kart #s) in the stints above to generate the leaderboard.<br>Until then, every stint is its own "seat".</div>`;
+    return;
+  }
+  const tierBg={Ace:"rgba(255,90,60,.16)",Core:"rgba(62,167,255,.14)",Backup:"rgba(255,194,60,.14)"};
+  const tierFg={Ace:"var(--hot)",Core:"var(--cool)",Backup:"var(--warn)"};
+  const minBest=Math.min(...rows.map(r=>r.best));
+  const useAdj=rows._useAdj, eff=rows._eff;
+  // adjusted column only when every driver has an estimate
+  const adjHead = useAdj ? `<th title="Expected lap in an average kart">Adj pace</th><th title="Median minus adjusted = kart luck">Kart Δ</th>` : "";
+  const body=rows.map(r=>{
+    let adjCell="";
+    if(useAdj){
+      const adjLap=eff.grand+r.adj;
+      const kartLuck=r.median-adjLap; // + means their karts were slower than avg (median worse than skill)
+      const luckCls=kartLuck>0.15?"delta-up":kartLuck<-0.15?"delta-dn":"delta-eq";
+      adjCell=`<td style="font-weight:700">${FMT(adjLap)}</td><td class="${luckCls}">${kartLuck>0?'+':''}${kartLuck.toFixed(2)}s</td>`;
+    }
+    return `<tr>
+    <td class="lapno"><span class="lb-rank p${r.rank}">${r.rank}</span></td>
+    <td style="text-align:left"><div class="lb-name"><span class="swatch" style="background:${r.color}"></span>${r.name}</div><div class="lb-team">${r.team}${r.karts.length?' · karts '+r.karts.join(','):''}</div></td>
+    <td><span class="lb-tier" style="background:${tierBg[r.tier]};color:${tierFg[r.tier]}">${r.tier}</span></td>
+    <td>${r.stints}</td><td>${r.laps}</td>
+    <td style="color:${r.best===minBest?'var(--hot)':'inherit'};font-weight:${r.best===minBest?700:400}">${FMT(r.best)}</td>
+    <td>${FMT(r.median)}</td>
+    ${adjCell}
+    <td>${r.std.toFixed(3)}</td>
+    <td>${r.cov.toFixed(2)}</td>
+    <td style="color:${r.deg>0.05?'var(--warn)':r.deg<-0.02?'var(--good)':'inherit'}">${r.deg>0?'+':''}${r.deg.toFixed(3)}</td>
+  </tr>`;}).join("");
+
+  // model-quality banner
+  let note="";
+  if(useAdj){
+    note=`<div class="modelnote ok">Kart-adjusted: ranking drivers on <b>expected pace in an average kart</b> — skill, not the luck of the draw. Model explains <b>${(eff.r2*100).toFixed(0)}%</b> of stint-time variance across ${eff.nObs} tagged stints.</div>`;
+  } else if(eff){
+    note=`<div class="modelnote warn">Tag a <b>kart #</b> on every stint to unlock kart-adjusted pace. Some stints are still missing a kart, so ranking falls back to raw median (which mixes driver skill with kart speed).</div>`;
+  } else {
+    note=`<div class="modelnote warn">Add <b>kart #</b>s to separate driver skill from kart pace. Right now drivers are ranked on raw median, so a fast kart can flatter a slower driver.</div>`;
+  }
+  const adjThs = useAdj ? `<th>Adj pace</th><th>Kart Δ</th>` : "";
+  el.innerHTML=`${note}<div class="card" style="padding:6px 4px"><table>
+    <thead><tr><th class="lapno">#</th><th style="text-align:left">Driver</th><th>Tier</th><th>Stints</th><th>Laps</th><th>Best</th><th>Median</th>${adjThs}<th>σ</th><th>CoV%</th><th>Deg s/lap</th></tr></thead>
+    <tbody>${body}</tbody></table></div>
+    <div class="card" style="margin-top:14px">${lineupRecos(rows,data,useAdj)}</div>`;
+}
+
+function renderKartTable(data){
+  const el=document.getElementById("karttable");
+  if(!el) return;
+  const rows=kartLeaderboard(data);
+  if(!rows){el.innerHTML=`<div class="lb-empty">Tag kart #s in the stints to recover each rental's hidden pace rating.</div>`;return;}
+  const fastest=rows[0].effect;
+  const body=rows.map(r=>{
+    const rel=r.effect-fastest; // seconds slower than the fastest kart
+    const barW=Math.min(100, rel/Math.max(0.01,(rows[rows.length-1].effect-fastest))*100);
+    return `<tr>
+      <td class="lapno"><span class="lb-rank p${r.rank}">${r.rank}</span></td>
+      <td style="text-align:left;font-weight:700">Kart ${r.kart}</td>
+      <td style="color:${r.effect<-0.1?'var(--hot)':r.effect>0.1?'var(--warn)':'inherit'};font-weight:700">${r.effect>0?'+':''}${r.effect.toFixed(2)}s</td>
+      <td><div style="display:flex;align-items:center;gap:8px;justify-content:flex-end"><span>+${rel.toFixed(2)}</span><div class="bar" style="width:80px"><i style="width:${barW}%;background:${rel<0.2?'var(--good)':rel<0.5?'var(--warn)':'var(--kerb)'}"></i></div></div></td>
+      <td>${r.stints}</td><td>${r.drivers}</td>
+    </tr>`;
+  }).join("");
+  el.innerHTML=`<div class="card" style="padding:6px 4px"><table>
+    <thead><tr><th class="lapno">#</th><th style="text-align:left">Kart</th><th title="pace offset vs average kart, lower=faster">Pace effect</th><th>vs fastest</th><th>Stints</th><th>Drivers</th></tr></thead>
+    <tbody>${body}</tbody></table></div>
+    <div class="taghint" style="margin:12px 4px 0">Recovered from the race itself: because karts rotated across drivers, the model untangles which laps were the kart and which were the hands. <b>Negative = faster kart.</b> Grab the top karts off the rack next time.</div>`;
+}
+
+function lineupRecos(rows,data,useAdj){
+  if(rows.length<2) return `<div class="reco"><span class="mk" style="color:var(--cool)">Note</span><span>Tag at least two drivers to get lineup recommendations.</span></div>`;
+  const out=[];
+  const paceLabel = useAdj ? "kart-adjusted" : "raw";
+  const paceOf = r => useAdj ? (rows._eff.grand+r.adj) : r.median;
+  const ace=rows[0], weak=rows[rows.length-1];
+  out.push(["Start",`<b>${ace.name}</b> is your fastest seat <em>(${paceLabel} pace ${FMT(paceOf(ace))}, CoV ${ace.cov.toFixed(2)}%). Open and close with them — most track time in the best hands.</em>`]);
+  const cons=[...rows].sort((a,b)=>a.cov-b.cov)[0];
+  if(cons.name!==ace.name) out.push(["Anchor",`<b>${cons.name}</b> is the metronome <em>(CoV ${cons.cov.toFixed(2)}%) — ideal for the long middle stint where consistency beats outright pace.</em>`]);
+  const gap=paceOf(weak)-paceOf(ace);
+  if(gap>0.4) out.push(["Watch",`<b>${weak.name}</b> is ${gap.toFixed(2)}s/lap off the ${paceLabel} pace <em>— over a 23-lap stint that's ${(gap*23).toFixed(1)}s. Shorten their stint or give them your best kart to compensate.</em>`]);
+  const fader=[...rows].sort((a,b)=>b.deg-a.deg)[0];
+  if(fader.deg>0.04) out.push(["Stamina",`<b>${fader.name}</b> fades within a stint <em>(+${fader.deg.toFixed(3)}s/lap) — keep their stints short, swap before the drop-off compounds.</em>`]);
+  // kart-luck insight
+  if(useAdj){
+    const unlucky=[...rows].map(r=>({n:r.name,luck:r.median-(rows._eff.grand+r.adj)})).sort((a,b)=>b.luck-a.luck)[0];
+    if(unlucky.luck>0.25) out.push(["Kart luck",`<b>${unlucky.name}</b> was dealt slow karts <em>(~${unlucky.luck.toFixed(2)}s/lap of their median was the kart, not them) — their real pace is better than the raw times suggest.</em>`]);
+  }
+  return out.map(([mk,t])=>`<div class="reco"><span class="mk" style="color:var(--hot)">${mk}</span><span>${t}</span></div>`).join("");
+}
+
+function renderLapTable(data){
+  const el=document.getElementById("laptable");
+  const maxN=Math.max(...data.map(t=>t.n));
+  // per-team incident/pit thresholds for cell coloring
+  const meta=data.map(t=>{
+    const racingMed=median(cleanLaps(t.laps).clean.length?cleanLaps(t.laps).clean:t.laps);
+    return {pit:racingMed*1.35, inc:racingMed*1.12, best:t.best};
+  });
+  let head=`<th class="lapno">Lap</th>`+data.map(t=>`<th style="text-align:right"><span class="swatch" style="background:${t.color}"></span>${t.name}</th>`).join("");
+  let rows="";
+  for(let i=0;i<maxN;i++){
+    let cells=`<td class="lapno">${i+1}</td>`;
+    data.forEach((t,ti)=>{
+      const v=t.laps[i];
+      if(v==null){cells+=`<td style="color:#3a3e47">—</td>`;return;}
+      let cls="";
+      if(v>meta[ti].pit) cls="pit";
+      else if(v>meta[ti].inc) cls="inc";
+      else if(v===meta[ti].best) cls="fast";
+      cells+=`<td class="${cls}">${FMT(v)}</td>`;
+    });
+    rows+=`<tr>${cells}</tr>`;
+  }
+  el.innerHTML=`<div class="lapfilter"><span style="color:var(--cool)">▍</span>pit/driver change <span style="color:var(--kerb);margin-left:10px">▍</span>incident/slow <span style="color:var(--hot);margin-left:10px">▍</span>driver best</div>
+    <div class="laptable-wrap"><table class="laps"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+let charts=[];
+function destroyCharts(){charts.forEach(c=>c.destroy());charts=[];}
+
+let sortState={key:"pos",dir:1,data:null};
+function sortBy(key){
+  if(state.sortKey===key)state.sortDir*=-1; else{state.sortKey=key;state.sortDir=1;}
+  renderRaceView();
+}
+
+function renderTable(showDelta=false, oPos={}){
+  const d=[...sortState.data];
+  const k=sortState.key,dir=sortState.dir;
+  d.sort((a,b)=>{const va=a[k],vb=b[k];return (va>vb?1:va<vb?-1:0)*dir;});
+  const cols=[
+    ["pos","Pos"],["name","Team"],["n","Laps"],["best","Best"],["median","Median"],
+    ["mean","Mean·clean"],["std","σ"],["cov","CoV %"],["deg","Deg s/lap"],["gap","Gap"]
+  ];
+  if(showDelta) cols.splice(1,0,["delta","Δ vs official"]);
+  const maxStd=Math.max(...d.map(x=>x.std));
+  const minBest=Math.min(...d.map(x=>x.best));
+  const body=d.map(r=>{
+    let deltaCell="";
+    if(showDelta){
+      const o=oPos[r.name], diff=o!=null?o-r.pos:0;
+      const cls=diff>0?"delta-up":diff<0?"delta-dn":"delta-eq";
+      const arrow=diff>0?`▲ ${diff}`:diff<0?`▼ ${-diff}`:"—";
+      deltaCell=`<td class="${cls}">${arrow} <span style="color:var(--dim);font-weight:400">${o!=null?'(was P'+o+')':''}</span></td>`;
+    }
+    return `<tr>
+    <td>${r.pos}</td>
+    ${deltaCell}
+    <td><span class="swatch" style="background:${r.color}"></span>${r.name}</td>
+    <td>${r.n}</td>
+    <td style="color:${r.best===minBest?'var(--hot)':'inherit'};font-weight:${r.best===minBest?700:400}">${FMT(r.best)}</td>
+    <td>${FMT(r.median)}</td>
+    <td>${FMT(r.mean)}</td>
+    <td><div style="display:flex;align-items:center;gap:8px;justify-content:flex-end"><span>${r.std.toFixed(3)}</span><div class="bar" style="width:54px"><i style="width:${maxStd?r.std/maxStd*100:0}%;background:${r.cov<1.2?'var(--good)':r.cov<2.2?'var(--warn)':'var(--kerb)'}"></i></div></div></td>
+    <td>${r.cov.toFixed(2)}</td>
+    <td style="color:${r.deg>0.05?'var(--warn)':r.deg<-0.02?'var(--good)':'inherit'}">${r.deg>0?'+':''}${r.deg.toFixed(3)}</td>
+    <td>${r.gap}</td>
+  </tr>`;}).join("");
+  document.getElementById("tbl").innerHTML=
+    `<thead><tr>${cols.map(([key,lbl])=>`<th class="${key===sortState.key?'active':''}" ${key!=='delta'?`onclick="sortBy('${key}')"`:''}>${lbl}</th>`).join("")}</tr></thead><tbody>${body}</tbody>`;
+}
+
+function buildInsights(d){
+  const ins=[];
+  const fastest=[...d].sort((a,b)=>a.best-b.best)[0];
+  const consistent=[...d].sort((a,b)=>a.cov-b.cov)[0];
+  const fader=[...d].sort((a,b)=>b.deg-a.deg)[0];
+  const improver=[...d].sort((a,b)=>a.deg-b.deg)[0];
+  const winner=[...d].sort((a,b)=>a.pos-b.pos)[0];
+
+  ins.push(["Win",`<b>${winner.name}</b> takes it — <em>${winner.n} laps, ${winner.lapsDown===0?'led on distance':''} total ${FMT(winner.total)}</em>`]);
+  ins.push(["Pace",`Fastest single lap: <b>${fastest.name}</b> at <b>${FMT(fastest.best)}</b> <em>(${(fastest.best-53.103>0?'+':'')}${(fastest.best-53.103).toFixed(3)}s vs track PB ref)</em>`]);
+  ins.push(["Consistency",`Most metronomic kart: <b>${consistent.name}</b> <em>(σ ${consistent.std.toFixed(3)}s · CoV ${consistent.cov.toFixed(2)}%) — the driver to beat over a stint</em>`]);
+  if(fader.deg>0.04) ins.push(["Fade",`<b>${fader.name}</b> dropped off hardest: <b>+${fader.deg.toFixed(3)}s/lap</b> <em>— tyre/grip fade or fatigue; over a 40-lap stint that's ${(fader.deg*40).toFixed(1)}s lost</em>`]);
+  if(improver.deg<-0.02) ins.push(["Build",`<b>${improver.name}</b> got quicker as the race went on <em>(${improver.deg.toFixed(3)}s/lap) — strong tyre management / warm-up profile</em>`]);
+  // pace vs result mismatch
+  if(fastest.name!==winner.name) ins.push(["Gap",`<b>${fastest.name}</b> had the raw pace but finished P${fastest.pos} <em>— lost it to traffic, consistency or pit timing, not lap speed</em>`]);
+  // potential
+  const tb=d.map(x=>({n:x.name,t:x.median,best:x.best})).sort((a,b)=>a.best-b.best)[0];
+  const untapped=[...d].sort((a,b)=>(b.median-b.best)-(a.median-a.best))[0];
+  ins.push(["Upside",`<b>${untapped.name}</b> has the most untapped pace <em>— ${ (untapped.median-untapped.best).toFixed(2)}s between their best lap and median; tighten consistency for a big result</em>`]);
+  // stint spread — biggest driver-quality gap within a team
+  const spread=[...d].map(t=>{
+    const meds=t.stints.map(s=>s.median);
+    return {name:t.name, gap: Math.max(...meds)-Math.min(...meds), fast:Math.min(...meds), slow:Math.max(...meds)};
+  }).sort((a,b)=>b.gap-a.gap)[0];
+  if(spread&&spread.gap>0.3) ins.push(["Lineup",`<b>${spread.name}</b> has the widest driver spread <em>— ${spread.gap.toFixed(2)}s between their fastest stint (${FMT(spread.fast)}) and slowest (${FMT(spread.slow)}); the weak seat is where the race was lost or won</em>`]);
+  return ins;
+}
+
+// ============================================================
+//  STATE — original (frozen) vs working (editable) data model
+// ============================================================
+const state = {
+  originalKarts: null,   // frozen at ingest, never mutated
+  workingKarts: null,    // edits land here
+  originalTags: null,    // {driverTags,kartTags} snapshot
+  showVirtual: false,    // global toggle, surfaced in every view
+  view: "data",
+  sortKey: "pos", sortDir: 1
+};
+
+function deepCopyKarts(k){const o={};for(const[name,laps]of Object.entries(k))o[name]=[...laps];return o;}
+function isDirty(){
+  if(!state.originalKarts) return false;
+  // any lap differs?
+  for(const name in state.originalKarts){
+    const a=state.originalKarts[name], b=state.workingKarts[name];
+    if(!b||a.length!==b.length) return true;
+    for(let i=0;i<a.length;i++) if(a[i]!==b[i]) return true;
+  }
+  // any tag differs?
+  return JSON.stringify({driverTags,kartTags})!==JSON.stringify(state.originalTags);
+}
+
+// the dataset every view reads, depending on the global virtual toggle
+function activeKarts(){return state.showVirtual ? state.workingKarts : state.originalKarts;}
+let _analysisCache={key:null,data:null,official:null};
+function activeAnalysis(){
+  const kartsNow=activeKarts();
+  const key=(state.showVirtual?"V":"O")+":"+JSON.stringify(kartsNow)+JSON.stringify({driverTags,kartTags});
+  if(_analysisCache.key===key) return _analysisCache.data;
+  const data=analyse(kartsNow,0);
+  _analysisCache={key,data};
+  return data;
+}
+function officialAnalysis(){return analyse(state.originalKarts,0);}
+
+// ============================================================
+//  INGEST + EDIT PIPELINE
+// ============================================================
+function ingest(){
+  const txt=document.getElementById("raw").value;
+  const karts=parseInput(txt);
+  if(!Object.keys(karts).length){
+    document.getElementById("data-panel").innerHTML='<div class="empty">Couldn\'t read any lap times. Check the format and try again.</div>';
+    return;
+  }
+  state.originalKarts=deepCopyKarts(karts);
+  state.workingKarts=deepCopyKarts(karts);
+  state.originalTags=JSON.parse(JSON.stringify({driverTags,kartTags}));
+  state.showVirtual=false;
+  refreshAll();
+  showView("data");
+}
+
+// edit a single lap time (Data view grid)
+function editLap(team,lapIdx,raw){
+  const v=parseTime(raw);
+  if(v==null||isNaN(v)) return;
+  state.workingKarts[team][lapIdx]=+v.toFixed(3);
+  onEdit();
+}
+function onEdit(){
+  // first edit flips us into virtual mode automatically
+  if(isDirty() && !state.showVirtual) state.showVirtual=true;
+  _analysisCache.key=null;
+  refreshAll();
+}
+function resetToOriginal(){
+  state.workingKarts=deepCopyKarts(state.originalKarts);
+  driverTags=JSON.parse(JSON.stringify(state.originalTags.driverTags));
+  kartTags=JSON.parse(JSON.stringify(state.originalTags.kartTags));
+  state.showVirtual=false;
+  _analysisCache.key=null;
+  refreshAll();
+}
+function toggleVirtual(on){
+  state.showVirtual=on;
+  _analysisCache.key=null;
+  refreshAll();
+}
+
+// ============================================================
+//  VIEW ROUTER
+// ============================================================
+function showView(v){
+  if(state.view==="replay" && v!=="replay") stopReplay();
+  state.view=v;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===v));
+  document.querySelectorAll(".view").forEach(p=>p.classList.remove("active"));
+  document.getElementById("view-"+v).classList.add("active");
+  renderView(v);
+}
+function refreshAll(){
+  // global badge
+  document.getElementById("vGlobalBadge").innerHTML = state.showVirtual ? `<span class="vGlobalBadge">Virtual</span>` : "";
+  renderView(state.view);
+}
+function renderView(v){
+  if(v==="director"){ renderDirectorView(); return; }   // works before any ingest
+  if(v==="product"){ renderProductView(); return; }      // planning board, no race needed
+  if(!state.originalKarts){ if(v!=="data") return; }
+  if(v==="data")   renderDataView();
+  if(v==="race")   renderRaceView();
+  if(v==="team")   renderTeamView();
+  if(v==="driver") renderDriverView();
+  if(v==="kart")   renderKartView();
+  if(v==="detektiv") renderDetektivView();
+  if(v==="replay") renderReplayView();
+}
+
+// shared virtual toggle bar for every analysis view
+function vbar(extra=""){
+  const on=state.showVirtual;
+  const dirty=isDirty();
+  const status = !dirty
+      ? `Showing the <b>official race</b> as recorded. Flip the switch, or edit any value in the Data view, to explore what-ifs.`
+      : on ? `<b>Virtual</b> — showing your edited scenario. ${extra}`
+           : `You have edits. Switch on to see the <b>virtual</b> result; off shows the <b>official</b> race.`;
+  return `<div class="vbar ${on?'on':''}">
+    <label class="vswitch ${on?'on':''}"><input type="checkbox" ${on?'checked':''} onchange="toggleVirtual(this.checked)"> ${on?'Virtual':'Official'}</label>
+    <span class="vstatus">${status}</span>
+    ${dirty?`<button class="vreset" onclick="resetToOriginal()">Reset to official</button>`:""}
+  </div>`;
+}
+
+// ============================================================
+//  DATA VIEW — editable lap grid + tags
+// ============================================================
+function renderDataView(){
+  const panel=document.getElementById("data-panel");
+  if(!state.originalKarts){panel.innerHTML='<div class="empty">No data yet. Paste lap times or load the demo race.</div>';return;}
+  const karts=activeKarts();
+  const teams=Object.keys(karts);
+  const maxN=Math.max(...teams.map(t=>karts[t].length));
+  const wk=state.workingKarts, ok=state.originalKarts;
+  // per-team pit threshold for visual dimming
+  const meta={};
+  teams.forEach(t=>{const rm=median(cleanLaps(ok[t]).clean.length?cleanLaps(ok[t]).clean:ok[t]);meta[t]={pit:rm*1.35};});
+  // stint index per lap (to attach the right driver/kart tag inputs at stint starts)
+  const stintMap={};
+  teams.forEach(t=>{
+    const st=splitStints(ok[t]); stintMap[t]=[];
+    st.forEach((s,si)=>{ stintMap[t][s.start-1]=si; });
+  });
+
+  let head=`<th class="cell0">Lap</th>`+teams.map(t=>`<th><span class="swatch" style="background:${PAL[teams.indexOf(t)%PAL.length]}"></span>${t}</th>`).join("");
+  // tag row (driver + kart per stint, shown at top)
+  let tagRow=`<tr class="tagrow"><td class="cell0">Tags</td>`+teams.map(t=>{
+    const st=splitStints(ok[t]);
+    return `<td><div style="display:flex;gap:4px;flex-wrap:wrap">`+st.map((s,si)=>`
+      <div class="tag-cell" title="Stint ${si+1}: laps ${s.start}–${s.end}">
+        <input value="${(driverTags[t]&&driverTags[t][si]||'').replace(/"/g,'&quot;')}" placeholder="Driver" onchange="setDriver('${t.replace(/'/g,"\\'")}',${si},this.value);onEdit()">
+        <input class="k" value="${(kartTags[t]&&kartTags[t][si]||'').replace(/"/g,'&quot;')}" placeholder="Kart#" onchange="setKart('${t.replace(/'/g,"\\'")}',${si},this.value);onEdit()">
+      </div>`).join("")+`</div></td>`;
+  }).join("")+`</tr>`;
+
+  let rows="";
+  for(let i=0;i<maxN;i++){
+    rows+=`<tr><td class="cell0">${i+1}</td>`+teams.map(t=>{
+      const v=wk[t][i], orig=ok[t][i];
+      if(v==null) return `<td></td>`;
+      const edited=v!==orig;
+      const isPit=v>meta[t].pit;
+      return `<td><input class="lap-cell ${edited?'edited':''} ${isPit?'pit':''}" value="${FMT(v)}"
+        title="${edited?'was '+FMT(orig):''}"
+        onchange="editLap('${t.replace(/'/g,"\\'")}',${i},this.value)"></td>`;
+    }).join("")+`</tr>`;
+  }
+
+  panel.innerHTML=`${vbar()}
+    <div class="editnote">Edit any lap time, driver, or kart number below. The first change flips the app into <b>virtual mode</b> — every view then offers an Official/Virtual switch. Pit/driver-change laps are dimmed. Tag drivers and karts in the top row.</div>
+    <div class="editgrid-wrap"><table class="editgrid">
+      <thead><tr>${head}</tr></thead>
+      <tbody>${tagRow}${rows}</tbody>
+    </table></div>`;
+}
+
+// ============================================================
+//  RACE VIEW — classement, charts, findings
+// ============================================================
+let raceCharts=[];
+let traceChart=null;                 // the pace-trace line chart (for legend toggling)
+let traceHidden=new Set();           // team names currently hidden on the trace
+function destroyRaceCharts(){raceCharts.forEach(c=>c.destroy());raceCharts=[];traceChart=null;}
+
+// reflect each dataset's visibility in the custom legend (dimmed = hidden)
+function syncTraceLegend(d){
+  const leg=document.getElementById("traceLegend"); if(!leg)return;
+  leg.querySelectorAll(".leg-item").forEach(el=>{
+    const i=+el.dataset.ds;
+    const name=traceChart?traceChart.data.datasets[i].label:(d&&d[i]&&d[i].name);
+    el.classList.toggle("off", traceHidden.has(name));
+  });
+}
+// toggle one team's line on the pace trace
+function toggleTrace(i){
+  if(!traceChart)return;
+  const name=traceChart.data.datasets[i].label;
+  const nowVisible=traceChart.isDatasetVisible(i);
+  traceChart.setDatasetVisibility(i, !nowVisible);
+  if(nowVisible) traceHidden.add(name); else traceHidden.delete(name);
+  traceChart.update();
+  syncTraceLegend();
+}
+// show or hide every team at once
+function traceAll(show){
+  if(!traceChart)return;
+  traceChart.data.datasets.forEach((ds,i)=>{
+    traceChart.setDatasetVisibility(i, show);
+    if(show) traceHidden.delete(ds.label); else traceHidden.add(ds.label);
+  });
+  traceChart.update();
+  syncTraceLegend();
+}
+function renderRaceView(){
+  const el=document.getElementById("view-race");
+  const d=activeAnalysis();
+  const official=officialAnalysis();
+  const oPos={}; official.forEach(x=>oPos[x.name]=x.pos);
+  const totalLaps=d.reduce((s,x)=>s+x.n,0);
+  const fieldBest=Math.min(...d.map(x=>x.best));
+  const avgCov=mean(d.map(x=>x.cov));
+  const showDelta=state.showVirtual && isDirty();
+
+  el.innerHTML=`${vbar(deltaSummary(d,oPos))}
+  <div class="grid cols-4">
+    <div class="card kpi"><div class="num">${d.length}</div><div class="lbl">Teams</div></div>
+    <div class="card kpi"><div class="num">${totalLaps}</div><div class="lbl">Laps</div></div>
+    <div class="card kpi"><div class="num" style="color:var(--hot)">${FMT(fieldBest)}</div><div class="lbl">Field best</div><div class="sub">${(fieldBest-53.103>0?'+':'')}${(fieldBest-53.103).toFixed(3)}s vs PB</div></div>
+    <div class="card kpi"><div class="num" style="color:var(--good)">${avgCov.toFixed(2)}%</div><div class="lbl">Avg CoV</div></div>
+  </div>
+  <section><div class="sec-head"><span class="n">01</span><h2>Classification</h2><span class="note">click headers to sort</span></div>
+    <div class="card" style="padding:6px 4px"><table id="tbl"></table></div></section>
+  <section><div class="sec-head"><span class="n">02</span><h2>Pace trace</h2><span class="note">click a team to show / hide · every lap, per team</span></div>
+    <div class="chartcard"><canvas id="trace"></canvas>
+      <div class="legend" id="traceLegend">${d.map((x,i)=>`<span class="leg-item" data-ds="${i}" onclick="toggleTrace(${i})"><i class="swatch" style="background:${x.color}"></i>${x.name}</span>`).join("")}
+      <span class="leg-allbtns"><button class="leg-mini" onclick="traceAll(true)">all</button><button class="leg-mini" onclick="traceAll(false)">none</button></span></div></div></section>
+  <section><div class="sec-head"><span class="n">03</span><h2>Pace vs consistency</h2><span class="note">lower-left = fast &amp; repeatable</span></div>
+    <div class="grid cols-2"><div class="chartcard"><canvas id="scatter"></canvas></div><div class="chartcard"><canvas id="box"></canvas></div></div></section>
+  <section><div class="sec-head"><span class="n">04</span><h2>Key findings</h2></div><div class="card" id="insights"></div></section>`;
+
+  sortState.data=d; sortState.key=state.sortKey; sortState.dir=state.sortDir;
+  renderTable(showDelta, oPos);
+  document.getElementById("insights").innerHTML=
+    buildInsights(d).map(([mk,txt])=>`<div class="insight"><span class="mk" style="color:var(--hot)">${mk}</span><span>${txt}</span></div>`).join("");
+
+  destroyRaceCharts();
+  // plot racing laps only — drop the standing-start "lap 0" (grid crossing) so it
+  // doesn't appear as a spurious first lap or squash the Y-axis.
+  const racingOf = x => x.hasGridLap ? x.laps.slice(1) : x.laps;
+  const maxN=Math.max(...d.map(x=>racingOf(x).length));
+  traceChart = new Chart(document.getElementById("trace"),{type:"line",
+    data:{labels:Array.from({length:maxN},(_,i)=>i+1),datasets:d.map(x=>({label:x.name,data:racingOf(x),borderColor:x.color,backgroundColor:x.color,borderWidth:1.6,pointRadius:1.5,pointHoverRadius:4,tension:.25,spanGaps:true}))},
+    options:chartOpts("Lap","Time (s)")});
+  raceCharts.push(traceChart);
+  // restore any prior show/hide selection (persists across re-renders within a session)
+  if(traceHidden.size){
+    traceChart.data.datasets.forEach((ds,i)=>{ traceChart.setDatasetVisibility(i, !traceHidden.has(ds.label)); });
+    traceChart.update();
+    syncTraceLegend(d);
+  }
+  raceCharts.push(new Chart(document.getElementById("scatter"),{type:"scatter",
+    data:{datasets:d.map(x=>({label:x.name,data:[{x:x.median,y:x.std}],backgroundColor:x.color,pointRadius:7,pointHoverRadius:9}))},
+    options:{...chartOpts("Median lap (s)","σ (s)"),plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${FMT(c.parsed.x)} · σ${c.parsed.y.toFixed(3)}`}}}}}));
+  raceCharts.push(new Chart(document.getElementById("box"),{type:"bar",
+    data:{labels:d.map(x=>x.name),datasets:[{label:"Best",data:d.map(x=>x.best),backgroundColor:"#ff5a3c"},{label:"Median",data:d.map(x=>x.median),backgroundColor:"#3ea7ff"}]},
+    options:{...chartOpts("","Time (s)"),scales:{x:{ticks:{color:"#8a909c"},grid:{display:false}},y:{beginAtZero:false,ticks:{color:"#8a909c"},grid:{color:"#23262e"}}}}}));
+}
+function deltaSummary(d,oPos){
+  if(!state.showVirtual||!isDirty()) return "";
+  const movers=d.filter(x=>oPos[x.name]!=null&&oPos[x.name]!==x.pos);
+  if(!movers.length) return "Positions unchanged vs official.";
+  return movers.map(x=>`${x.name} P${oPos[x.name]}→P${x.pos}`).join(" · ");
+}
+
+// ============================================================
+//  TEAM VIEW — stint cards per team
+// ============================================================
+function renderTeamView(){
+  const el=document.getElementById("view-team");
+  const d=activeAnalysis();
+  el.innerHTML=`${vbar()}
+    <section><div class="sec-head"><span class="n">—</span><h2>Driver stints by team</h2><span class="note">tag drivers &amp; karts in Data view</span></div>
+    <div id="stints"></div></section>`;
+  renderStints(d);
+}
+
+// ============================================================
+//  DRIVER VIEW — kart-adjusted leaderboard + lineup
+// ============================================================
+function renderDriverView(){
+  const el=document.getElementById("view-driver");
+  const d=activeAnalysis();
+  el.innerHTML=`${vbar()}
+    <section><div class="sec-head"><span class="n">—</span><h2>Driver leaderboard</h2><span class="note">kart-adjusted · skill with kart luck removed</span></div>
+    <div id="leaderboard"></div></section>`;
+  renderLeaderboard(d);
+}
+
+// ============================================================
+//  KART VIEW — recovered pace ratings
+// ============================================================
+function renderKartView(){
+  const el=document.getElementById("view-kart");
+  const d=activeAnalysis();
+  el.innerHTML=`${vbar()}
+    <section><div class="sec-head"><span class="n">—</span><h2>Kart pace ratings</h2><span class="note">hidden kart speed, recovered from rotation</span></div>
+    <div id="karttable"></div></section>`;
+  renderKartTable(d);
+}
+
+// ============================================================
+//  KART DETEKTIV — physical-kart constraint solver
+// ============================================================
+function setKartFact(team,stintIdx,kart){
+  const k=team+"#"+stintIdx;
+  if(!kart||kart==="?"){ delete detective.facts[k]; }
+  else detective.facts[k]=String(kart);
+  renderDetektivView();
+}
+function clearKartFacts(){ detective.facts={}; renderDetektivView(); }
+
+function renderDetektivView(){
+  const el=document.getElementById("view-detektiv");
+  const d=activeAnalysis();
+  if(!d || !d.length){ el.innerHTML='<div class="empty">Ingest a race first.</div>'; return; }
+  const sol=solveKartsEngine(d);
+  const truth=(window._truth&&window._truth.physKart)?window._truth.physKart:null;
+  const confPct=Math.round(sol.confidence*100);
+
+  // legend of all physical karts in the pool
+  const poolChips=sol.karts.map(k=>`<span class="kchip">${k}</span>`).join("");
+
+  const rows=d.map(t=>{
+    const cells=[];
+    for(let st=0; st<t.stints.length; st++){
+      const cs=sol.cand[t.name+"#"+st];
+      const arr=[...cs].sort((a,b)=>(""+a).localeCompare(""+b,undefined,{numeric:true}));
+      const known=!!detective.facts[t.name+"#"+st] || st===0;
+      const solved=arr.length===1;
+      const truthK=truth?truth[t.name]?.[st]:null;
+      const correct = truthK!=null ? (arr.length===1 && arr[0]===truthK) : null;
+      // build a dropdown of pool karts to enter a fact (disabled for stint 0 grid)
+      const opts=['<option value="?">— ?</option>'].concat(
+        sol.karts.map(k=>`<option value="${k}"${detective.facts[t.name+"#"+st]===k?" selected":""}>${k}</option>`)
+      ).join("");
+      const setHtml = solved
+        ? `<span class="kk solved${known?' given':''}">${arr[0]}</span>`
+        : `<span class="kk multi">{${arr.join(", ")}}</span>`;
+      const truthBadge = (truthK!=null && !known)
+        ? `<span class="ktruth ${correct?'ok':'no'}" title="ground truth">${truthK}</span>` : "";
+      cells.push(`<td class="dt-cell${solved?' is-solved':''}${st===0?' is-grid':''}">
+        <div class="dt-set">${setHtml}${truthBadge}</div>
+        ${st===0?'<span class="dt-grid">grid</span>':
+          `<select class="dt-pick" onchange="setKartFact('${t.name.replace(/'/g,"\\'")}',${st},this.value)">${opts}</select>`}
+      </td>`);
+    }
+    return `<tr><td class="dt-team"><span class="dot" style="background:${t.color}"></span>${t.name}</td>${cells.join("")}</tr>`;
+  }).join("");
+
+  const maxStints=Math.max(...d.map(t=>t.stints.length));
+  const head=`<th class="dt-team">Team</th>`+Array.from({length:maxStints},(_,i)=>`<th>Stint ${i+1}</th>`).join("");
+
+  const truthNote = truth
+    ? `<span class="note">demo race · ground truth shown for scoring (green = solved correctly)</span>`
+    : `<span class="note">real race · enter known physical karts to raise confidence</span>`;
+
+  el.innerHTML=`${vbar()}
+    <section>
+      <div class="sec-head"><span class="n">—</span><h2>Kart Detektiv</h2>${truthNote}</div>
+      <div class="dt-intro">
+        Each team's transponder number is fixed, but the <b>physical kart</b> changes at every
+        pit stop — the team takes one of the 3 karts waiting in the box (⅓ chance each).
+        Stint 1 is the starting grid (kart = team number). For later stints the solver shows
+        every <b>still-possible kart</b>; enter any you know and the constraints cascade.
+      </div>
+      <div class="dt-confbar">
+        <div class="dt-conflabel">Confidence <b>${confPct}%</b> · ${sol.resolved}/${sol.total} stints resolved</div>
+        <div class="dt-conftrack"><div class="dt-conffill" style="width:${confPct}%"></div></div>
+        <button class="ghost sm" onclick="clearKartFacts()">Clear facts</button>
+      </div>
+      <div class="dt-pool">Kart pool (${sol.karts.length}): ${poolChips} <span class="dt-poolnote">· 3 start in the box</span></div>
+      <div class="dt-tablewrap"><table class="dt-table"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>
+    </section>`;
+}
+
+// ============================================================
+//  REPLAY VIEW — animate cars around the Wohlen circuit
+// ============================================================
+// REAL Kart-Bahn Wohlen circuit, from OpenStreetMap way 163933507 (© OSM contributors,
+// ODbL). lat/lon projected (cos-lat corrected), normalized into the viewBox, lightly
+// smoothed. Measured loop ~811 m vs official 825 m. Cars are placed by arc-length: a car's
+// progress is cumulative race-time, mapped lap-by-lap onto the loop. Lap time
+// sets how fast a car sweeps the path (a slow/pit lap visibly crawls).
+const TRACK_PATH = "M 341.9 209.1 Q 342 205.3 343.1 135.6 Q 344.3 65.9 345.7 63.0 Q 347.1 60 351.0 57.5 Q 354.9 54.9 359.9 54.5 Q 365 54 368.7 55.9 Q 372.4 57.7 375.6 60.5 Q 378.8 63.2 398.8 88.3 Q 418.8 113.3 420.9 119.5 Q 423 125.7 421.6 128.7 Q 420.2 131.7 417.2 134.4 Q 414.2 137.2 409.6 138.1 Q 405 139.1 394.2 140.4 Q 383.4 141.8 378.4 145.0 Q 373.3 148.2 370.8 152.3 Q 368.3 156.5 368.3 161.3 Q 368.3 166.2 370.1 170.3 Q 371.9 174.4 377.2 177.4 Q 382.5 180.4 390.6 182.0 Q 398.6 183.6 431.3 184.6 Q 463.9 185.5 471.3 187.6 Q 478.6 189.6 485.7 193.8 Q 492.8 197.9 496.5 202.8 Q 500.2 207.6 526.6 241.6 Q 553.1 275.6 555.6 281.8 Q 558.1 288 557.4 295.8 Q 556.7 303.6 552.6 309.6 Q 548.5 315.6 542.5 317.0 Q 536.5 318.3 530.3 317.2 Q 524.1 316.1 520.2 313.6 Q 516.3 311 501.8 295.1 Q 487.3 279.3 485.5 273.8 Q 483.7 268.2 478.6 247.6 Q 473.5 226.9 470.8 223.8 Q 468 220.7 463.8 218.3 Q 459.6 215.8 455.4 216.3 Q 451.1 216.8 447.5 219.1 Q 443.9 221.3 441.5 226.2 Q 439.1 231.1 439.8 236.6 Q 440.4 242.1 464.4 291.2 Q 488.5 340.3 489.4 344.4 Q 490.4 348.4 490.3 352.8 Q 490.1 357.2 488.1 360.1 Q 486.2 363.1 482.4 364.6 Q 478.7 366 475.8 365.5 Q 472.9 365 454.4 360.8 Q 435.8 356.6 433.7 355.0 Q 431.6 353.3 430.0 349.8 Q 428.4 346.2 428.2 342.3 Q 428 338.4 433.9 318.9 Q 439.7 299.3 439.5 294.8 Q 439.4 290.3 438.4 286.7 Q 437.5 283.1 436.1 278.9 Q 434.8 274.6 421.8 244.6 Q 408.8 214.5 405.9 211.9 Q 403 209.3 399.3 209.0 Q 395.5 208.7 391.3 209.1 Q 387.1 209.6 384.3 212.8 Q 381.5 216.1 379.6 220.6 Q 377.6 225.2 377.8 229.9 Q 378 234.7 379.3 237.4 Q 380.6 240.2 396.4 261.0 Q 412.1 281.8 412.8 285.6 Q 413.4 289.3 413.0 295.0 Q 412.7 300.7 409.1 303.6 Q 405.6 306.5 401.7 306.6 Q 397.8 306.8 392.5 304.6 Q 387.1 302.3 383.6 299.2 Q 380.2 296.1 362.0 259.2 Q 343.8 222.3 342.9 217.6 Q 341.9 212.9 341.9 209.1 Z";
+
+// --- Pit lane: branches off Turn 7 (apex ≈ 433,355) and rejoins at the start/finish
+// line (≈ 342,209). Built as a cubic Bézier whose end tangents align with the track at
+// each junction (smooth branch-off and merge), bowing toward the INSIDE of the loop so
+// it never crosses the racing surface. Drawn as a narrower lane than the main track.
+// Entry point sits just before apex 7 so cars peel off on corner entry, as in reality.
+// --- Pit lane: branches off Turn 7 and follows the near-horizontal T6→T7 direction
+// out to the left, turns up into a vertical lane alongside the start/finish straight,
+// then merges back into the start/finish point (≈ 342,209) at a shallow ~15° angle.
+// Geometry hand-fitted to the real track: T6 ≈ (484,359), T7 ≈ (436,351), the section
+// between them runs ~horizontal-left (heading ≈ −167°); finish line is vertical (−91°).
+const PIT_PATH = "M 446 363 L 366 356 C 332 352 316 338 316 312 L 316 270 C 316 258 326.9 265.2 329.5 255.5 L 341.9 209.1";
+const PIT_LABEL_SVG = `<text x="360" y="372" class="pit-text">PIT</text>`;
+const replay = {
+  raf:null, lastTs:null, raceT:0, speed:8, playing:false,
+  total:0, cum:{}, order:[], pathEl:null, len:0, cars:{},
+  labelMode:"team", line:null, head:null, N:0,
+  showApex:true, apexes:[], gapMode:"leader",
+  halfWidthPx:4.3    // 5 m uniform track width at ~1.72 px/m
+};
+
+function buildCumulative(d){
+  // cumulative time per team (ms-ish seconds), and total race duration = max
+  const cum={}; let total=0;
+  d.forEach(t=>{
+    const arr=[0]; let s=0;
+    t.laps.forEach(l=>{ s+=l; arr.push(s); });
+    cum[t.name]={times:arr, color:t.color, nLaps:t.laps.length, laps:t.laps,
+      hasGridLap:!!t.hasGridLap};
+    total=Math.max(total,s);
+  });
+  // grid order for the standing start: by lap-0 time (the grid-crossing value),
+  // fastest off the line first → pole. Stagger them behind the start line so the
+  // short lap-0 animates the grid → start-line crossing.
+  const gridTeams=Object.keys(cum).filter(n=>cum[n].hasGridLap);
+  gridTeams.sort((a,b)=>cum[a].laps[0]-cum[b].laps[0]);
+  gridTeams.forEach((n,i)=>{ cum[n].gridSlot=i; });
+  return {cum,total,gridCount:gridTeams.length};
+}
+
+function renderReplayView(){
+  stopReplay();
+  const el=document.getElementById("view-replay");
+  const d=activeAnalysis();
+  const {cum,total,gridCount}=buildCumulative(d);
+  replay.cum=cum; replay.total=total; replay.raceT=0; replay.gridCount=gridCount;
+
+  el.innerHTML=`${vbar()}
+    <section><div class="sec-head"><span class="n">—</span><h2>Race replay</h2><span class="note">${state.showVirtual?'virtual scenario':'official race'} · 825 m circuit</span></div>
+    <div class="replay-wrap">
+      <div class="replay-board card">
+        <div class="rb-head"><span class="rb-title">Live timing</span><span id="rbLeadLap" class="rb-leadlap"></span></div>
+        <div id="rpBoard" class="rp-board"></div>
+      </div>
+      <div class="replay-stage card">
+        <svg id="replaySvg" viewBox="0 0 900 420" preserveAspectRatio="xMidYMid meet">
+          <path d="${PIT_PATH}" class="pit-base"/>
+          <path d="${PIT_PATH}" class="pit-edge"/>
+          <path d="${TRACK_PATH}" class="trk-base"/>
+          <path d="${TRACK_PATH}" class="trk-edge"/>
+          <path id="trkLine" d="${TRACK_PATH}" class="trk-line"/>
+          <path id="pitLine" d="${PIT_PATH}" class="pit-line"/>
+          <path id="raceLine" class="trk-raceline"/>
+          <g id="pitlabel">${PIT_LABEL_SVG}</g>
+          <g id="paddockLayer"></g>
+          <g id="startline"></g>
+          <g id="apexLayer"></g>
+          <g id="carsLayer"></g>
+        </svg>
+      </div>
+      <div class="replay-side card">
+        <div class="rp-clock"><span id="rpClock">0:00:00</span><span class="rp-clocksub">/ ${fmtClock(total)} race</span></div>
+        <div class="rp-labels">
+          <span class="rp-lbltitle">Labels</span>
+          <button class="rp-lblbtn ${replay.labelMode==='team'?'on':''}" data-mode="team" onclick="setReplayLabels('team')">Team</button>
+          <button class="rp-lblbtn ${replay.labelMode==='driver'?'on':''}" data-mode="driver" onclick="setReplayLabels('driver')">Driver</button>
+          <button class="rp-lblbtn ${replay.labelMode==='kart'?'on':''}" data-mode="kart" onclick="setReplayLabels('kart')">Kart</button>
+        </div>
+        <div class="rp-labels">
+          <span class="rp-lbltitle">Apex</span>
+          <button id="apexToggle" class="rp-lblbtn ${replay.showApex?'on':''}" onclick="toggleApex()">${replay.showApex?'Shown':'Hidden'}</button>
+        </div>
+        <div class="rp-labels">
+          <span class="rp-lbltitle">Gap to</span>
+          <button id="gapLeadBtn" class="rp-lblbtn ${replay.gapMode==='leader'?'on':''}" onclick="setGapMode('leader')">Leader</button>
+          <button id="gapAheadBtn" class="rp-lblbtn ${replay.gapMode==='ahead'?'on':''}" onclick="setGapMode('ahead')">Ahead</button>
+        </div>
+      </div>
+    </div>
+    <div class="replay-controls card">
+      <button id="rpPlay" class="rp-play" onclick="toggleReplay()">▶ Play</button>
+      <button class="rp-btn" onclick="seekReplay(0)">⏮ Restart</button>
+      <div class="rp-speedwrap">
+        <span class="rp-spdlabel">Speed <b id="rpSpeedVal">${replay.speed}×</b></span>
+        <input id="rpSpeed" class="rp-slider" type="range" min="1" max="120" step="1" value="${replay.speed}" oninput="setReplaySpeed(this.value)">
+        <div class="rp-spdticks"><span>1×</span><span>30×</span><span>60×</span><span>90×</span><span>120×</span></div>
+      </div>
+      <div class="rp-seekwrap">
+        <input id="rpSeek" class="rp-seek" type="range" min="0" max="${total.toFixed(2)}" step="0.1" value="0" oninput="seekReplay(this.value)">
+      </div>
+    </div></section>`;
+
+  // measure path
+  replay.pathEl=document.getElementById("trkLine");
+  replay.len=replay.pathEl.getTotalLength();
+  buildSpeedProfile();
+  buildPitSystem();
+  // start/finish line marker — nudged a little forward of the path origin so the
+  // staggered grid (which forms just behind it) sits clearly behind the line.
+  const startAhead = replay.lineLen ? replay.lineLen*0.006 : 5;  // small forward offset
+  const p0=replay.pathEl.getPointAtLength(startAhead);
+  const p1=replay.pathEl.getPointAtLength(startAhead+6);
+  const ang=Math.atan2(p1.y-p0.y,p1.x-p0.x)+Math.PI/2;
+  document.getElementById("startline").innerHTML=
+    `<line x1="${p0.x+Math.cos(ang)*13}" y1="${p0.y+Math.sin(ang)*13}" x2="${p0.x-Math.cos(ang)*13}" y2="${p0.y-Math.sin(ang)*13}" class="trk-start"/>`;
+
+  // create car nodes — simple dots; label content is user-toggleable (team/driver/kart)
+  const layer=document.getElementById("carsLayer");
+  layer.innerHTML=Object.entries(cum).map(([name,c])=>
+    `<g class="car" id="car-${cssId(name)}">
+       <circle r="7.5" fill="${c.color}" stroke="#0b0d11" stroke-width="2"/>
+       <text class="carlabel" x="11" y="4">${replayLabel(name,0)}</text>
+     </g>`).join("");
+
+  drawFrame(0);
+  renderReplayOrder(0);
+}
+
+// --- Minimum-curvature racing line (the proper sim-dev approach). -------------
+// We DON'T place apexes by hand. We treat the line as a curve constrained to a track
+// corridor (centerline ± half-width) and find the position across that corridor at
+// every point that MINIMIZES total curvature ∫κ² — the smoothest line the track
+// allows. Apexes emerge naturally: the smoothest path clips the inside of every
+// corner and runs wide on entry/exit, correct on hairpins and switchbacks alike,
+// because it's a global smoothness solve, not a local sign decision.
+//
+// Solved by Gauss–Seidel relaxation in corridor space: each point moves toward the
+// midpoint of its neighbours (the discrete zero-curvature condition), projected onto
+// its lateral axis and clamped to the ±half-width corridor. Track width is assumed
+// UNIFORM 5 m (~1.72 px/m → half-width 4.3 px).
+function buildRacingLine(){
+  const len=replay.len, N=720;
+  const HALF = (replay.halfWidthPx!=null) ? replay.halfWidthPx : 4.3;
+  const C=[], nrm=[];
+  for(let i=0;i<N;i++){const p=replay.pathEl.getPointAtLength(i/N*len);C.push({x:p.x,y:p.y});}
+  for(let i=0;i<N;i++){
+    const a=C[(i-1+N)%N], b=C[(i+1)%N];
+    let tx=b.x-a.x, ty=b.y-a.y; const tl=Math.hypot(tx,ty)||1e-6;
+    nrm.push({x:-ty/tl, y:tx/tl});
+  }
+  // alpha[i] in [-1,1] = lateral position across the corridor (0 = centerline)
+  const alpha=new Array(N).fill(0);
+  const pt=i=>({x:C[i].x+nrm[i].x*alpha[i]*HALF, y:C[i].y+nrm[i].y*alpha[i]*HALF});
+
+  const ITER=160;
+  for(let it=0; it<ITER; it++){
+    for(let i=0;i<N;i++){
+      const pPrev=pt((i-1+N)%N), pNext=pt((i+1)%N);
+      const mx=(pPrev.x+pNext.x)/2, my=(pPrev.y+pNext.y)/2;       // smoothest target
+      const target=((mx-C[i].x)*nrm[i].x + (my-C[i].y)*nrm[i].y)/HALF;
+      let na=alpha[i] + (target-alpha[i]);
+      if(na>1)na=1; if(na<-1)na=-1;                                // stay on track
+      alpha[i]=na;
+    }
+  }
+
+  const line=new Array(N);
+  for(let i=0;i<N;i++) line[i]=pt(i);
+  const segLen=new Array(N);
+  for(let i=0;i<N;i++){const b=line[(i+1)%N]; segLen[i]=Math.hypot(b.x-line[i].x, b.y-line[i].y);}
+  const cumLen=new Array(N+1); cumLen[0]=0;
+  for(let i=0;i<N;i++) cumLen[i+1]=cumLen[i]+segLen[i];
+  replay.line=line; replay.lineN=N; replay.lineCumLen=cumLen; replay.lineLen=cumLen[N];
+
+  // optional faint guide
+  const guide=document.getElementById("raceLine");
+  if(guide){
+    let dp="M "+line[0].x.toFixed(1)+" "+line[0].y.toFixed(1)+" ";
+    for(let i=1;i<N;i++) dp+="L "+line[i].x.toFixed(1)+" "+line[i].y.toFixed(1)+" ";
+    guide.setAttribute("d", dp+"Z");
+  }
+  detectApexes();
+}
+
+// --- Apex detection: the apex is where the racing line is most curved within a -----
+// corner — i.e. a local maximum of |curvature| along the line. We find well-separated
+// peaks above a threshold and number them in travel order (1, 2, 3 …) so they can be
+// shown as markers, like the numbered corners on a circuit map.
+function detectApexes(){
+  const line=replay.line, N=replay.lineN; if(!line) { replay.apexes=[]; return; }
+  // curvature magnitude along the line (angle between consecutive tangents)
+  const k=new Array(N);
+  for(let i=0;i<N;i++){
+    const a=line[(i-3+N)%N], b=line[i], c=line[(i+3)%N];
+    let v1x=b.x-a.x,v1y=b.y-a.y,v2x=c.x-b.x,v2y=c.y-b.y;
+    const l1=Math.hypot(v1x,v1y)||1e-6,l2=Math.hypot(v2x,v2y)||1e-6;
+    k[i]=Math.abs((v1x/l1)*(v2y/l2)-(v1y/l1)*(v2x/l2));
+  }
+  const maxK=Math.max(...k)||1e-6;
+  const THRESH=maxK*0.30;          // ignore gentle bends; only real corners
+  const SEP=Math.round(N*0.04);    // min spacing between distinct apexes (~4% of lap)
+  // candidate = local max over a window, above threshold
+  const cand=[];
+  const W=Math.round(N*0.015);
+  for(let i=0;i<N;i++){
+    if(k[i]<THRESH) continue;
+    let isMax=true;
+    for(let j=-W;j<=W;j++){ if(k[(i+j+N)%N]>k[i]){ isMax=false; break; } }
+    if(isMax) cand.push({i, k:k[i]});
+  }
+  // suppress near-duplicates: keep the strongest within SEP of each other
+  cand.sort((a,b)=>b.k-a.k);
+  const kept=[];
+  for(const c of cand){
+    if(kept.every(p=>{const d=Math.abs(p.i-c.i); return Math.min(d,N-d)>=SEP;})) kept.push(c);
+  }
+  // number them in travel order (by index around the loop)
+  kept.sort((a,b)=>a.i-b.i);
+  replay.apexes=kept.map((c,idx)=>({n:idx+1, x:line[c.i].x, y:line[c.i].y, i:c.i}));
+  renderApexMarkers();
+}
+
+// draw numbered apex markers into the replay SVG
+function renderApexMarkers(){
+  const layer=document.getElementById("apexLayer");
+  if(!layer) return;
+  if(!replay.showApex){ layer.innerHTML=""; return; }
+  layer.innerHTML=(replay.apexes||[]).map(a=>
+    `<g class="apex" transform="translate(${a.x.toFixed(1)},${a.y.toFixed(1)})">
+       <circle r="7" class="apex-dot"/>
+       <text class="apex-num" y="3.5">${a.n}</text>
+     </g>`).join("");
+}
+
+// position on the racing line at distance-fraction df (0..1 of the line's length)
+function lineAtDist(df){
+  const N=replay.lineN, cum=replay.lineCumLen, L=replay.lineLen;
+  let d=(((df%1)+1)%1)*L;
+  let lo=0,hi=N; while(lo<hi){const m=(lo+hi)>>1; if(cum[m+1]<=d)lo=m+1;else hi=m;}
+  const i=Math.min(lo,N-1), span=cum[i+1]-cum[i]||1e-9, f=(d-cum[i])/span;
+  const a=replay.line[i], b=replay.line[(i+1)%N];
+  return {x:a.x+(b.x-a.x)*f, y:a.y+(b.y-a.y)*f};
+}
+
+// --- Speed profile: now derived from the RACING LINE's curvature, so cars brake --
+// for the line they actually drive. Cars slow in corners, run to top speed on
+// straights, with accel/brake limits. The profile only redistributes time WITHIN a
+// lap (normalized), so each lap still finishes in its exact recorded duration.
+function buildSpeedProfile(){
+  buildRacingLine();
+  const line=replay.line, N=replay.lineN;
+  replay.N=N;
+  // curvature magnitude along the racing line
+  const curv=new Array(N);
+  for(let i=0;i<N;i++){
+    const a=line[(i-3+N)%N], b=line[i], c=line[(i+3)%N];
+    let t1x=b.x-a.x,t1y=b.y-a.y,t2x=c.x-b.x,t2y=c.y-b.y;
+    const l1=Math.hypot(t1x,t1y)||1e-6,l2=Math.hypot(t2x,t2y)||1e-6;
+    curv[i]=Math.abs((t1x/l1)*(t2y/l2)-(t1y/l1)*(t2x/l2));
+  }
+  const maxC=Math.max(...curv)||1e-6;
+  const VMIN=0.32;
+  let v=new Array(N);
+  for(let i=0;i<N;i++){
+    const sharp=Math.min(1,curv[i]/maxC);
+    v[i]=VMIN + (1-VMIN)*(1-Math.pow(sharp,0.55));
+  }
+  const ACC=0.018, BRK=0.045;
+  for(let pass=0;pass<2;pass++){
+    for(let i=0;i<N;i++){const j=(i-1+N)%N; if(v[i]>v[j]+ACC) v[i]=v[j]+ACC;}
+    for(let i=N-1;i>=0;i--){const j=(i+1)%N; if(v[i]>v[j]+BRK) v[i]=v[j]+BRK;}
+  }
+  replay.vshape=v;
+  // time cost per segment = arc length / speed (use the line's real segment lengths)
+  const cum=replay.lineCumLen;
+  const cost=new Array(N); let tot=0;
+  for(let i=0;i<N;i++){const sl=cum[i+1]-cum[i]; cost[i]=sl/Math.max(0.05,v[i]); tot+=cost[i];}
+  const cumTime=new Array(N+1); cumTime[0]=0;
+  for(let i=0;i<N;i++) cumTime[i+1]=cumTime[i]+cost[i]/tot;
+  replay.cumTime=cumTime;
+}
+
+// time-fraction (0..1 within a lap) -> distance-fraction (0..1 along racing line)
+function distForTimeFrac(tf){
+  const N=replay.N, ct=replay.cumTime;
+  tf=((tf%1)+1)%1;
+  let lo=0,hi=N; while(lo<hi){const mid=(lo+hi)>>1; if(ct[mid+1]<=tf)lo=mid+1;else hi=mid;}
+  const i=Math.min(lo,N-1), span=ct[i+1]-ct[i]||1e-9, f=(tf-ct[i])/span;
+  return (i+f)/N;
+}
+
+function cssId(s){return s.replace(/[^a-zA-Z0-9]/g,"_");}
+function fmtClock(sec){const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=Math.floor(sec%60);return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;}
+
+// where is a team on the loop at race time t? returns {frac 0..1, lapsDone}
+function teamPos(c,t){
+  const times=c.times;
+  if(t<=0) return {frac:0,lapsDone:0,done:false};
+  const last=times[times.length-1];
+  if(t>=last) return {frac:0,lapsDone:c.nLaps,done:true};
+  // find lap index where times[k] <= t < times[k+1]
+  let k=0; while(k<times.length-1 && times[k+1]<=t) k++;
+  const lapDur=times[k+1]-times[k];
+  const frac=lapDur>0?(t-times[k])/lapDur:0;
+  return {frac, lapsDone:k, done:false};
+}
+
+function drawFrame(t){
+  const names=Object.keys(replay.cum);
+  const pit=replay.pit;
+  names.forEach((name,idx)=>{
+    const c=replay.cum[name];
+    const {frac,lapsDone,done}=teamPos(c,t);     // time fraction through current lap
+    const id=cssId(name);
+    const g=document.getElementById("car-"+id);
+    if(!g) return;
+
+    const onPit = pit && pit.pitLaps[name] && pit.pitLaps[name].has(lapsDone) && !done;
+
+    let x,y, parked=false, inBox=false;
+    if(onPit){
+      // a pit lap = race normally to Turn 6, THEN the box sequence. Split the lap's
+      // time so the race-to-Turn-6 part runs at the team's mean green pace, and the
+      // remaining time covers drive-in + 30 s stop + drive-out.
+      const tPit = c.times[lapsDone+1]-c.times[lapsDone];     // this pit lap's duration
+      const raceFrac6 = pit.raceFrac6;                         // distance frac of Turn 6
+      const meanLap = pit.meanLap[name] || tPit;
+      const tRace6 = Math.min(tPit*0.85, meanLap*raceFrac6);  // time to reach Turn 6
+      const splitF = tRace6 / tPit;                           // frac where racing ends
+      if(frac < splitF){
+        // RACE the line normally up to Turn 6 (no jump, real pace)
+        const df = (frac/splitF) * raceFrac6;
+        const p=lineAtDist(df);
+        const p2=lineAtDist((df+0.004)%1);
+        let hx=p2.x-p.x, hy=p2.y-p.y; const hl=Math.hypot(hx,hy)||1e-6;
+        const nx=-hy/hl, ny=hx/hl;
+        const lateral=((idx%4)-1.5)*1.8;
+        x=p.x+nx*lateral; y=p.y+ny*lateral;
+      } else {
+        // BOX sequence: remaining time → drive in, stop, drive out
+        const pf = (frac-splitF)/(1-splitF);
+        const pp=pitPos(pf);
+        x=pp.x; y=pp.y; parked=pp.parked; inBox=true;
+      }
+    } else if(c.hasGridLap && lapsDone===0){
+      // STANDING START: lap 0 is the grid-crossing. Stagger cars behind the start
+      // line and move each from its grid slot up to the line as lap 0 elapses, so
+      // the short lap-0 time animates the launch instead of a full hot lap.
+      // The grid sits just BEHIND the start line (high distance-fraction, i.e. the
+      // last stretch before the line at dist-frac 0), two cars per row.
+      const slot = c.gridSlot||0;
+      const row = Math.floor(slot/2);               // grid rows of 2
+      const col = slot%2;                            // left / right of the line
+      // back-of-grid distance behind the line, in distance-fraction units. Each row
+      // sits a little further back. The whole grid spans ~6% of a lap.
+      const rowGap = 0.011;                          // spacing between rows
+      const gridBack = (row+1)*rowGap;               // how far behind the line this row starts
+      // lap-0 fraction 0→1 drives the car from its grid spot up across the line.
+      const startDF = (1 - gridBack + 1) % 1;        // behind the line (wraps near 1.0)
+      const df = (startDF + frac*gridBack) % 1;      // advance up to the line (df→0/1 wrap)
+      const p=lineAtDist(df);
+      const p2=lineAtDist((df+0.004)%1);
+      let hx=p2.x-p.x, hy=p2.y-p.y; const hl=Math.hypot(hx,hy)||1e-6;
+      const nx=-hy/hl, ny=hx/hl;
+      const lateral=(col-0.5)*4.4;                   // two-wide staggered grid
+      x=p.x+nx*lateral; y=p.y+ny*lateral;
+    } else {
+      const df=distForTimeFrac(frac);            // distance fraction along racing line
+      const p=lineAtDist(df);
+      const p2=lineAtDist((df+0.004)%1);         // local heading for the lateral fan
+      let hx=p2.x-p.x, hy=p2.y-p.y; const hl=Math.hypot(hx,hy)||1e-6;
+      const nx=-hy/hl, ny=hx/hl;
+      const lateral=((idx%4)-1.5)*1.8;
+      x=p.x+nx*lateral; y=p.y+ny*lateral;
+    }
+    g.setAttribute("transform",`translate(${x.toFixed(1)},${y.toFixed(1)})`);
+    g.classList.toggle("pitting", parked);
+
+    // label: the driver/kart changes during the stop — show the incoming crew once
+    // the car is leaving the box (exit phase).
+    const lbl=g.querySelector(".carlabel");
+    if(lbl){
+      const lapForLabel = (inBox && !parked) ? lapsDone+1 : lapsDone;
+      lbl.textContent=replayLabel(name, lapForLabel);
+    }
+  });
+  document.getElementById("rpClock").textContent=fmtClock(t);
+  const seek=document.getElementById("rpSeek"); if(seek && document.activeElement!==seek) seek.value=t.toFixed(2);
+}
+
+// --- Pit system: sample the pit-lane path, detect which laps are pit laps per team,
+// and lay out a paddock slot per team beside the lane. When a car is on a pit lap, it
+// drives INTO the lane, stops at its paddock slot (driver swap), waits, then rejoins —
+// all mapped into the duration of that (already-slow) pit lap, so race time stays exact.
+function buildPitSystem(){
+  const pl=document.getElementById("pitLine");
+  if(!pl){ replay.pit=null; return; }
+  const L=pl.getTotalLength(), M=160, pts=[];
+  for(let i=0;i<=M;i++){ const p=pl.getPointAtLength(i/M*L); pts.push({x:p.x,y:p.y}); }
+  // raceFrac6 = the racing-line distance fraction where a pitting car peels into the
+  // lane. We race normally to ~Turn 6, then hand off to the lane mouth. To avoid any
+  // visible jump, we pick the line fraction whose point is CLOSEST to the lane's first
+  // point — the seamless branch-off (lands just past Turn 6, between 6 and 7).
+  let raceFrac6=0.70;
+  if(replay.line && replay.lineCumLen && replay.lineLen && pts.length){
+    const mouth=pts[0]; let best=1e9, found=0.70;
+    for(let i=0;i<replay.lineN;i++){
+      const p=replay.line[i]; const dd=(p.x-mouth.x)*(p.x-mouth.x)+(p.y-mouth.y)*(p.y-mouth.y);
+      if(dd<best){ best=dd; found=replay.lineCumLen[i]/replay.lineLen; }
+    }
+    // only trust it if it's plausibly near Turn 6/7 (back half of the lap); else keep default
+    if(found>0.45 && found<0.92) raceFrac6=found;
+  }
+  replay.pit={ pts, len:L, M, parkFrac:0.52, exitFrac:0.82, raceFrac6 };
+
+  // paddock slots: one marker per team just left of the lane's vertical section,
+  // stacked vertically. The vertical section runs roughly x≈316, y 312→255.
+  const teams=Object.keys(replay.cum);
+  const slots={};
+  const px=300;                       // paddock column x (left of the lane)
+  const y0=320, y1=250;               // span beside the vertical lane section
+  teams.forEach((tm,i)=>{
+    const f = teams.length>1 ? i/(teams.length-1) : 0.5;
+    slots[tm] = { x:px, y:y0+(y1-y0)*f };
+  });
+  replay.pit.slots=slots;
+
+  // which laps are pit laps for each team? a pit lap = lap time above the pit threshold.
+  // Also store each team's mean GREEN-lap time, used to time the "race to Turn 6" part
+  // of a pit lap at normal pace (the rest of the pit-lap time is the box sequence).
+  const pitLaps={}, meanLap={};
+  teams.forEach(tm=>{
+    const laps=(replay.cum[tm].laps)||[];
+    const racingMed=median(cleanLaps(laps).clean.length?cleanLaps(laps).clean:laps);
+    const thr=racingMed*1.35;
+    const set=new Set();
+    const green=[];
+    laps.forEach((l,k)=>{ if(l>thr) set.add(k); else if(l>racingMed*0.7) green.push(l); });
+    pitLaps[tm]=set;
+    meanLap[tm]= green.length ? green.reduce((a,b)=>a+b,0)/green.length : racingMed;
+  });
+  replay.pit.pitLaps=pitLaps;
+  replay.pit.meanLap=meanLap;
+
+  renderPaddock();
+}
+
+function renderPaddock(){
+  const layer=document.getElementById("paddockLayer");
+  if(!layer||!replay.pit){ if(layer)layer.innerHTML=""; return; }
+  if(replay.showPaddock===false){ layer.innerHTML=""; return; }
+  const slots=replay.pit.slots;
+  layer.innerHTML=`<rect x="288" y="240" width="26" height="92" rx="4" class="paddock-box"/>
+    <text x="301" y="236" class="paddock-cap">PADDOCK</text>`+
+    Object.entries(slots).map(([tm,s])=>
+      `<circle cx="${s.x}" cy="${s.y}" r="2.4" class="paddock-slot"/>`
+    ).join("");
+}
+
+// position of a pitting car: maps lap-fraction f (0..1 of the pit lap) to a point.
+// Enter (Turn 7 → park) → wait (driver swap, hold) → exit (park → finish line).
+function pitPos(f){
+  const P=replay.pit, pts=P.pts, M=P.M;
+  const sampleAt=df=>{ const t=Math.max(0,Math.min(1,df))*M; const i=Math.floor(t), fr=t-i;
+    const a=pts[i], b=pts[Math.min(M,i+1)]; return {x:a.x+(b.x-a.x)*fr, y:a.y+(b.y-a.y)*fr}; };
+  if(f < P.parkFrac){
+    const df = (f / P.parkFrac) * P.parkFrac;        // 0 → parkFrac along the lane
+    return { ...sampleAt(df), parked:false, phase:"in" };
+  } else if(f < P.exitFrac){
+    return { ...sampleAt(P.parkFrac), parked:true, phase:"wait" };  // hold at park point
+  } else {
+    const df = P.parkFrac + ((f - P.exitFrac)/(1 - P.exitFrac)) * (1 - P.parkFrac);
+    return { ...sampleAt(df), parked:false, phase:"out" };
+  }
+}
+
+// which stint is a team in at this lap count? maps lap -> stint index
+function stintOfLap(team,lap){
+  const st=splitStints(activeKarts()[team]);
+  let acc=0;
+  for(let i=0;i<st.length;i++){ acc+=st[i].n; if(lap<acc) return i; }
+  return Math.max(0,st.length-1);
+}
+// build the label string per the current mode
+function replayLabel(team,lapsDone){
+  const mode=replay.labelMode||"team";
+  if(mode==="team") return team;
+  const si=stintOfLap(team,lapsDone);
+  if(mode==="driver") return driverFor(team,si);
+  if(mode==="kart"){ const k=kartFor(team,si); return k?("#"+k):team; }
+  return team;
+}
+function setReplayLabels(mode){
+  replay.labelMode=mode;
+  document.querySelectorAll(".rp-lblbtn").forEach(b=>b.classList.toggle("on",b.dataset.mode===mode));
+  drawFrame(replay.raceT);
+}
+
+function toggleApex(){
+  replay.showApex=!replay.showApex;
+  const b=document.getElementById("apexToggle");
+  if(b){ b.classList.toggle("on",replay.showApex); b.textContent=replay.showApex?"Shown":"Hidden"; }
+  renderApexMarkers();
+}
+
+// race-time at which team c had covered `prog` laps (lap index + fraction).
+// inverts the cumulative-lap-time curve: times[k] is the clock time at completing lap k.
+function timeAtProgress(c, prog){
+  const times=c.times;            // times[k] = cumulative seconds at end of lap k (k=0 = race start offset)
+  if(prog<=0) return times[0]||0;
+  const k=Math.floor(prog);
+  if(k>=c.nLaps) return times[times.length-1];
+  const frac=prog-k;
+  const t0=times[k], t1=times[k+1]!=null?times[k+1]:times[k];
+  return t0+(t1-t0)*frac;         // linear within the lap
+}
+
+function renderReplayOrder(t){
+  const rows=Object.entries(replay.cum).map(([name,c])=>{
+    const {lapsDone,done}=teamPos(c,t);
+    let covered=lapsDone;
+    if(!done && lapsDone<c.nLaps){const {frac}=teamPos(c,t);covered=lapsDone+frac;}
+    return {name,color:c.color,lapsDone,covered,done,nLaps:c.nLaps,c};
+  }).sort((a,b)=>b.covered-a.covered);
+
+  const leader=rows[0];
+  const leadLap=document.getElementById("rbLeadLap");
+  if(leadLap&&leader) leadLap.textContent=`Lead L${leader.lapsDone}/${leader.nLaps}`;
+
+  // TIME gaps: compare each car against a reference at the SAME progress point.
+  // gap = (race-time this car reached `ref.covered`) − (race-time ref reached it).
+  // Since cars behind haven't reached the leader's progress yet, we instead measure
+  // at the *trailing* car's covered point: how long ago the car ahead was here.
+  const mode=replay.gapMode||"leader";
+  const board=document.getElementById("rpBoard");
+  if(!board) return;
+  board.innerHTML=rows.map((r,i)=>{
+    let gapTxt, gapCls="";
+    if(i===0){ gapTxt="LEADER"; gapCls="lead"; }
+    else if(r.done){ gapTxt="FIN"; }
+    else {
+      const ref = mode==="ahead" ? rows[i-1] : rows[0];   // car ahead, or the leader
+      // both compared at THIS car's covered point: time ref passed it vs time this car is here now
+      const tHere = t;                                     // this car is at `r.covered` right now (race-time t)
+      const tRef  = timeAtProgress(ref.c, r.covered);      // when ref was at the same progress
+      const dt = tHere - tRef;                             // seconds this car is behind ref at this point
+      const lapsBehind = Math.floor(ref.covered - r.covered);
+      if(lapsBehind >= 1){
+        gapTxt = "+"+lapsBehind+" L";
+      } else {
+        gapTxt = "+"+Math.max(0,dt).toFixed(1)+"s";
+      }
+    }
+    return `<div class="rp-row ${r.done?'fin':''} ${i===0?'p1':''}">
+      <span class="rp-pos">${r.done?'✓':(i+1)}</span>
+      <span class="rp-dot" style="background:${r.color}"></span>
+      <span class="rp-name">${r.name}</span>
+      <span class="rp-lap">L${r.lapsDone}</span>
+      <span class="rp-gap ${gapCls}">${gapTxt}</span>
+    </div>`;
+  }).join("");
+}
+
+function setGapMode(m){
+  replay.gapMode=m;
+  const a=document.getElementById("gapLeadBtn"), b=document.getElementById("gapAheadBtn");
+  if(a)a.classList.toggle("on",m==="leader");
+  if(b)b.classList.toggle("on",m==="ahead");
+  renderReplayOrder(replay.raceT);
+}
+
+function replayTick(ts){
+  if(!replay.playing){replay.raf=null;return;}
+  if(replay.lastTs==null) replay.lastTs=ts;
+  const dt=(ts-replay.lastTs)/1000; replay.lastTs=ts;
+  replay.raceT += dt*replay.speed;
+  if(replay.raceT>=replay.total){ replay.raceT=replay.total; drawFrame(replay.raceT); renderReplayOrder(replay.raceT); pauseReplay(); return; }
+  drawFrame(replay.raceT);
+  renderReplayOrder(replay.raceT);
+  replay.raf=requestAnimationFrame(replayTick);
+}
+function toggleReplay(){ replay.playing?pauseReplay():playReplay(); }
+function playReplay(){
+  if(replay.raceT>=replay.total) replay.raceT=0;
+  replay.playing=true; replay.lastTs=null;
+  const b=document.getElementById("rpPlay"); if(b)b.textContent="⏸ Pause";
+  replay.raf=requestAnimationFrame(replayTick);
+}
+function pauseReplay(){
+  replay.playing=false;
+  const b=document.getElementById("rpPlay"); if(b)b.textContent="▶ Play";
+}
+function stopReplay(){
+  replay.playing=false;
+  if(replay.raf){cancelAnimationFrame(replay.raf);replay.raf=null;}
+  replay.lastTs=null;
+}
+function setReplaySpeed(v){
+  replay.speed=+v;
+  const el=document.getElementById("rpSpeedVal"); if(el)el.textContent=v+"×";
+}
+function seekReplay(v){
+  replay.raceT=Math.max(0,Math.min(replay.total,+v));
+  drawFrame(replay.raceT);
+  renderReplayOrder(replay.raceT);
+  if(+v===0){ pauseReplay(); }
+}
+
+function chartOpts(xt,yt){return{
+  responsive:true,maintainAspectRatio:false,interaction:{mode:"nearest",intersect:false},
+  plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${FMT(c.parsed.y)}`}}},
+  scales:{
+    x:{title:{display:!!xt,text:xt,color:"#5c6270"},ticks:{color:"#8a909c",maxTicksLimit:14},grid:{color:"#1f222a"}},
+    y:{title:{display:!!yt,text:yt,color:"#5c6270"},ticks:{color:"#8a909c"},grid:{color:"#23262e"}}
+  }
+};}
+
+// driver/kart tag changed from within a view — recompute and re-render current view
+function rerender(){ onEdit(); }
+
+function clearAll(){
+  document.getElementById("raw").value="";
+  driverTags={};kartTags={};
+  state.originalKarts=null;state.workingKarts=null;state.showVirtual=false;
+  _analysisCache.key=null;
+  document.getElementById("vGlobalBadge").innerHTML="";
+  document.getElementById("data-panel").innerHTML='<div class="empty">Cleared. Paste new lap data to analyse.</div>';
+  ["race","team","driver","kart","replay"].forEach(v=>document.getElementById("view-"+v).innerHTML='<div class="empty">Ingest a race first.</div>');
+  stopReplay();
+  destroyRaceCharts();
+  showView("data");
+}
+
+// ============================================================================
+//  KART DETEKTIV — physical-kart constraint engine
+// ============================================================================
+// Model: the team/transponder number (the column header) is constant all race.
+// In stint 0 the PHYSICAL kart number equals that team number (known starting
+// grid). At every pit stop the team returns its physical kart to the box and
+// takes one of the 3 boxed karts at random (⅓ each). The physical kart per
+// later stint is hidden — the engine recovers it from the box dynamics plus any
+// facts the user enters. Pool = nTeams + 3 physical karts.
+//
+// detective state: per-stint candidate SETS, user facts, derived pit events.
+const detective = { facts:{}, lastSolution:null, poolExtra:[] };
+
+// derive the time-ordered pit events from the analysed race: each team enters
+// the box at the cumulative time of its pit lap (the slow lap that ends a stint).
+function derivePitEvents(data){
+  const events=[]; // {team, stintIdx, t}
+  data.forEach(t=>{
+    let cum=0;
+    const laps=t.laps;
+    // walk stints: each stint has .n laps; the pit lap is the boundary lap.
+    // cumulative time to the END of stint s = start of the pit event for s+1.
+    // Skip a discarded grid lap (lap 0) so lapPtr stays aligned with the stints,
+    // which no longer count it.
+    let lapPtr = t.hasGridLap ? 1 : 0;
+    t.stints.forEach((s,si)=>{
+      for(let l=0;l<s.n;l++){ cum+=laps[lapPtr]||0; lapPtr++; }
+      // the team enters the box at the END of its racing stint (this cumulative
+      // time), which is exactly the ordering key the simulator uses for swaps.
+      if(si<t.stints.length-1){
+        events.push({team:t.name, stintIdx:si+1, t:+cum.toFixed(1)});
+        const pitLap=laps[lapPtr]||0; cum+=pitLap; lapPtr++;   // then the pit lap
+      }
+    });
+  });
+  events.sort((a,b)=>a.t-b.t);
+  return events;
+}
+
+// the pool of physical kart ids: each team's starting number + 3 box karts.
+// For the real race the 3 box karts are unknown numbers; we label any we don't
+// know from the grid as "B1","B2","B3". If team numbers are known we use them.
+function kartPool(data){
+  const teamNos = data.map(t=>{
+    const kt=kartTags[t.name];
+    return (kt&&kt[0]) ? String(kt[0]) : t.name;  // stint-0 number = grid kart
+  });
+  // box-start karts:
+  //  - demo race: ground truth tells us exactly which 3 karts start in the box.
+  //  - real race: we DON'T know which karts are in the box. But the grid numbers
+  //    leave gaps in the 50–69 rental range, and those missing numbers are the
+  //    physical karts that were waiting in the box. We surface them as the real
+  //    candidate identities (e.g. {61,62,66,67,68}) rather than anonymous B1/B2/B3,
+  //    so the detective shows true possible kart numbers.
+  let extra;
+  if(detective.poolExtra.length){
+    extra=detective.poolExtra;
+  } else if(window._truth && window._truth.boxStart){
+    extra=window._truth.boxStart.map(String);     // demo: exact box karts known
+  } else {
+    // real race: derive the missing numbers in the rental range as box candidates
+    const have=new Set(teamNos.map(Number).filter(n=>!isNaN(n)));
+    const lo=Math.min(...have), hi=Math.max(...have);
+    const missing=[];
+    for(let k=lo;k<=hi;k++) if(!have.has(k)) missing.push(String(k));
+    extra = missing.length>=3 ? missing : ["B1","B2","B3"];
+  }
+  // boxSize is the number of karts physically in the box at any instant = 3
+  // (reglement), even if we have MORE candidate identities than that for the real
+  // race. The solver treats boxSize as the count free at once; the extra identities
+  // widen the candidate sets honestly.
+  const boxSize = 3;
+  return { teamNos, all:[...teamNos, ...extra], boxSize, boxCandidates:extra };
+}
+
+// core solver: candidate sets per (team,stint), tightened to a fixpoint.
+function solveKartsEngine(data){
+  const teams=data.map(t=>t.name);
+  const events=derivePitEvents(data);
+  const pool=kartPool(data);
+  const karts=pool.all, boxSize=pool.boxSize;
+  const stintCount={}; data.forEach(t=>stintCount[t.name]=t.stints.length);
+  const key=(tm,st)=>tm+"#"+st;
+
+  // seed candidates: stint 0 = known grid kart (team number); others = all karts.
+  // user facts override.
+  const cand={};
+  data.forEach(t=>{
+    const grid=(kartTags[t.name]&&kartTags[t.name][0])?String(kartTags[t.name][0]):t.name;
+    for(let st=0; st<stintCount[t.name]; st++){
+      const f=detective.facts[key(t.name,st)];
+      if(st===0)      cand[key(t.name,st)]=new Set([grid]);
+      else if(f)      cand[key(t.name,st)]=new Set([f]);
+      else            cand[key(t.name,st)]=new Set(karts);
+    }
+  });
+
+  const evs=[...events].sort((a,b)=>a.t-b.t);
+  function activeStintAt(tm,t){ let st=0; for(const e of evs){ if(e.team===tm && e.t<=t) st=e.stintIdx; } return st; }
+  function trackCandAt(tm,t){ const k=key(tm,activeStintAt(tm,t)); return cand[k]||new Set(karts); }
+
+  let changed=true, iters=0;
+  while(changed && iters<300){
+    changed=false; iters++;
+
+    // forward box-set propagation
+    const onTrack0={}; let gridKnown=true;
+    teams.forEach(tm=>{ const s=cand[key(tm,0)]; if(s&&s.size===1)onTrack0[tm]=[...s][0]; else gridKnown=false; });
+    let boxSet=new Set(karts); Object.values(onTrack0).forEach(k=>boxSet.delete(k));
+    const onTrackNow={...onTrack0};
+    // The box is only "exact" (its membership fully known) when the number of free
+    // candidate karts equals the physical box size. For the real race we have MORE
+    // candidate identities (e.g. 5 missing numbers) than the 3 box slots, so the
+    // box is genuinely uncertain and we must not prune as if we knew its contents.
+    let boxExact = gridKnown && boxSet.size===boxSize;
+    for(const ev of evs){
+      const k=key(ev.team,ev.stintIdx); const cs=cand[k]; if(!cs) continue;
+      // Only constrain by the box when its membership is CERTAIN (boxExact). Once an
+      // earlier take was ambiguous, we no longer know exactly which karts are free,
+      // so we must not prune — otherwise we'd wrongly exclude a kart that entered the
+      // box via an earlier (unknown) return.
+      if(boxExact){
+        const inter=[]; cs.forEach(x=>{ if(boxSet.has(x))inter.push(x); });
+        if(inter.length && inter.length<cs.size){ cs.clear(); inter.forEach(x=>cs.add(x)); changed=true; }
+        if(boxSet.size===boxSize && cs.size>1){
+          const excl=new Set();
+          const prev=cand[key(ev.team,ev.stintIdx-1)]; if(prev&&prev.size===1)excl.add([...prev][0]);
+          // exclude karts certainly on track with another team — but ONLY if that
+          // team's nearest pit is not within a small window of this event. Near-
+          // simultaneous pits have ambiguous order (we can't resolve sub-second
+          // ordering from lap data), so we must not exclude based on them.
+          const TOL=8; // seconds of ordering ambiguity
+          teams.forEach(tm2=>{ if(tm2===ev.team)return; const s2=onTrackNow[tm2]; if(s2==null)return;
+            // is tm2 pitting within TOL of this event? if so, its kart may already be free
+            const near = evs.some(e2=>e2.team===tm2 && Math.abs(e2.t-ev.t)<=TOL);
+            if(!near) excl.add(s2);
+          });
+          const poss=[...boxSet].filter(x=>!excl.has(x)&&cs.has(x));
+          if(poss.length && poss.length<cs.size){ cs.clear(); poss.forEach(x=>cs.add(x)); changed=true; }
+        }
+      }
+      const returned=onTrackNow[ev.team];
+      const taken=cs.size===1?[...cs][0]:null;
+      if(taken){ boxSet.delete(taken); if(returned!=null)boxSet.add(returned); onTrackNow[ev.team]=taken; }
+      else { if(returned!=null)boxSet.add(returned); onTrackNow[ev.team]=null; boxExact=false; }
+    }
+
+    // pairwise on-track exclusion at each pit instant. A kart certainly on track
+    // with another team can't be taken — but use a tolerance window so near-
+    // simultaneous pits (ambiguous order) don't cause unsound pruning.
+    const TOL=8;
+    for(const ev of evs){
+      const k=key(ev.team,ev.stintIdx); const cs=cand[k]; if(!cs) continue;
+      const before=ev.t-0.001; const elsewhere=new Set();
+      teams.forEach(tm2=>{ if(tm2===ev.team)return;
+        // skip tm2 if it pits within TOL of this event (its kart may already be free)
+        if(evs.some(e2=>e2.team===tm2 && Math.abs(e2.t-ev.t)<=TOL)) return;
+        const c2=trackCandAt(tm2,before); if(c2.size===1)elsewhere.add([...c2][0]); });
+      const leaving=cand[key(ev.team,ev.stintIdx-1)]; const own=(leaving&&leaving.size===1)?[...leaving][0]:null;
+      const rm=[]; cs.forEach(x=>{ if(elsewhere.has(x))rm.push(x); else if(own&&x===own)rm.push(x); });
+      if(rm.length){ rm.forEach(x=>cs.delete(x)); changed=true; }
+    }
+
+    // time-overlap uniqueness: a singleton kart can't be on two overlapping stints
+    const intervals=[];
+    teams.forEach(tm=>{
+      const pits=evs.filter(e=>e.team===tm).sort((a,b)=>a.stintIdx-b.stintIdx); let t0=0;
+      for(let st=0; st<stintCount[tm]; st++){
+        const np=pits.find(p=>p.stintIdx===st+1); const t1=np?np.t:Infinity;
+        intervals.push({team:tm,st,t0,t1,set:cand[key(tm,st)]}); t0=t1;
+      }
+    });
+    for(const a of intervals){ if(!a.set||a.set.size!==1)continue; const kk=[...a.set][0];
+      for(const b of intervals){ if(b===a||b.team===a.team||!b.set)continue;
+        if(a.t0<b.t1 && b.t0<a.t1 && b.set.has(kk)){ b.set.delete(kk); changed=true; } } }
+  }
+
+  // confidence + summary
+  let resolved=0,total=0;
+  teams.forEach(tm=>{ for(let st=0; st<stintCount[tm]; st++){ total++; if(cand[key(tm,st)].size===1)resolved++; }});
+  detective.lastSolution={cand,events:evs,karts,boxSize,resolved,total,
+    confidence: total?resolved/total:0, stintCount, teamNos:pool.teamNos};
+  return detective.lastSolution;
+}
+
+// ---- Monte Carlo race simulator ----
+// Hidden truth the analysis must recover: each kart's pace offset, each driver's skill.
+// Karts rotate through teams (3 always resting in pit), creating the crossover that
+// makes kart-effect vs driver-skill identifiable from lap times alone.
+function gaussian(mean,sd){ // Box-Muller
+  let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+  return mean + sd*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+function simulateRace(nTeams, cfg){
+  // --- Calibrated to the real Wohlen 28.06.2026 race ------------------------------
+  // Real racing pace ran ~50.5–53 s (fastest laps 50.5–51.0; field median ~52). A
+  // clean pit lap (drive in, 30 s stop per reglement, drive out) measured 79–82 s,
+  // i.e. ~28 s lost over a ~52 s green lap. Teams made exactly 5 stops (6 stints).
+  const TRACK_BASE=50.4;          // floor; fastest real laps were ~50.5
+  const STINTS_PER_TEAM=(cfg&&cfg.stints)?cfg.stints:6;  // 5 driver changes (reglement min)
+  const LAPS_MIN=20,LAPS_MAX=24;
+  // --- kart pool: from the Race Director config if given, else default 50–69 ------
+  const poolNos = (cfg&&cfg.pool&&cfg.pool.length) ? cfg.pool.slice() : (()=>{const a=[];for(let k=50;k<=69;k++)a.push(String(k));return a;})();
+  // each kart carries a hidden pace offset (some rentals are just faster). 0 = perfect.
+  const offsetByNo={}; poolNos.forEach(no=>offsetByNo[no]=+gaussian(1.4,0.8).toFixed(3));
+  let karts, teamNames, boxNos;
+  if(cfg&&cfg.teams&&cfg.teams.length){
+    // director-driven: teams start on their configured karts, box karts as set
+    nTeams=cfg.teams.length;
+    teamNames=cfg.teams.map(t=>t.name);
+    boxNos=(cfg.boxKarts&&cfg.boxKarts.length)?cfg.boxKarts.slice():poolNos.filter(k=>!cfg.teams.some(t=>t.startKart===k)).slice(0,3);
+    // ordered kart list: each team's start kart first (so onTrack[i]=start), then box
+    const startNos=cfg.teams.map(t=>t.startKart);
+    karts=[...startNos,...boxNos].map(no=>({no:String(no),offset:offsetByNo[no]!=null?offsetByNo[no]:+gaussian(1.4,0.8).toFixed(3)}));
+  } else {
+    // default random selection: n+3 karts
+    const pool=poolNos.map(no=>({no,offset:offsetByNo[no]}));
+    const nKarts=nTeams+3;
+    karts=[...pool].sort(()=>Math.random()-0.5).slice(0,nKarts);
+    teamNames=["Team LX","Schall&Rauch","Affoltern RT","Polaris GP","KuBaA Crew","District 11","Furttal RT","Käfer Cup","Glattal GP","Reppisch Racing","Limmat Lions","Bünzli Boys","Säuliamt SC","Wohlen Werks","Heitersberg","Mutschellen","Bremgarten BR"];
+  }
+  // --- drivers: per-team count from config (default 2), hidden skill + consistency ---
+  const teamDrivers={};
+  if(cfg&&cfg.teams&&cfg.teams.length){
+    cfg.teams.forEach((t,ti)=>{
+      const nd=Math.max(1,t.nDrivers||2);
+      const arr=[];
+      for(let di=0;di<nd;di++){
+        arr.push({
+          name:driverName(t,di),
+          team:t.name,
+          skill:+gaussian(1.4,0.8).toFixed(3),
+          cons:+(0.40+Math.random()*0.5).toFixed(3),
+          stamina:+gaussian(0.004,0.006).toFixed(4)
+        });
+      }
+      teamDrivers[t.name]=arr;
+    });
+  } else {
+    const firstNames=["Marco","Nina","Sven","Pat","Dee","Reto","Lukas","Anna","Tobias","Mia","Jan","Lea","Finn","Noa","Elia","Robin","Yael","Timo","Cyril","Vera","Luca","Sina","Beni","Aria","Nico","Lena","Ramon","Fabi","Jana","Dario","Selin","Kai","Ben","Lara"];
+    teamNames.slice(0,nTeams).forEach((tn,t)=>{
+      teamDrivers[tn]=[0,1].map(s=>({
+        name:firstNames[(t*2+s)%firstNames.length]+(t*2+s>=firstNames.length?"·"+(t+1):""),
+        team:tn,
+        skill:+gaussian(1.4,0.8).toFixed(3),
+        cons:+(0.40+Math.random()*0.5).toFixed(3),
+        stamina:+gaussian(0.004,0.006).toFixed(4)
+      }));
+    });
+  }
+  const drivers=[]; Object.values(teamDrivers).forEach(a=>a.forEach(d=>drivers.push(d)));
+
+  // (1) precompute stint structure: laps per stint, driver per stint, incidents.
+  const plan={};
+  teamNames.slice(0,nTeams).forEach(tn=>{
+    plan[tn]=[];
+    for(let stint=0;stint<STINTS_PER_TEAM;stint++){
+      const laps=LAPS_MIN+Math.floor(Math.random()*(LAPS_MAX-LAPS_MIN+1));
+      const incidents=[];
+      // incidents stay well below the pit-lap band (79–82 s) so stint detection
+      // can't confuse a crash with a pit stop: a spin adds ~6 s, a bad one ~12 s.
+      if(Math.random()<0.12) incidents.push({lap:Math.floor(Math.random()*laps),add:6});
+      if(Math.random()<0.06) incidents.push({lap:Math.floor(Math.random()*laps),add:12});
+      plan[tn].push({laps,incidents,drv:teamDrivers[tn][stint%teamDrivers[tn].length]});
+    }
+  });
+
+  // (2) EVENT-DRIVEN simulation. We advance each team stint by stint, but resolve
+  // the next pit (kart swap) in GLOBAL race-time order using the ACTUAL emitted
+  // lap times. This guarantees the box state is consistent with the cumulative
+  // timestamps the Kart Detektiv later derives from the same lap data — no
+  // ordering mismatch, so the solver is sound.
+  const stintKart={}, stintLaps={}, teamCum={}, nextStint={};
+  teamNames.slice(0,nTeams).forEach((tn,i)=>{ stintKart[tn]=[karts[i]]; stintLaps[tn]=[]; teamCum[tn]=0; nextStint[tn]=0; });
+  const box=[]; for(let i=nTeams;i<karts.length;i++) box.push(karts[i]);
+
+  // helper: emit one stint's laps for team tn at stint index st with kart krt.
+  function emitStint(tn,st){
+    const p=plan[tn][st], krt=stintKart[tn][st], drv=p.drv, laps=[];
+    for(let l=0;l<p.laps;l++){
+      let t=TRACK_BASE + krt.offset + drv.skill + drv.stamina*l + gaussian(0,drv.cons);
+      const inc=p.incidents.find(x=>x.lap===l); if(inc)t+=inc.add;
+      laps.push(+t.toFixed(3));
+    }
+    stintLaps[tn][st]=laps;
+    teamCum[tn]+=laps.reduce((a,b)=>a+b,0);
+  }
+  // emit stint 0 for all teams, compute their first pit time
+  teamNames.slice(0,nTeams).forEach(tn=>emitStint(tn,0));
+
+  // priority loop: repeatedly take the team whose NEXT pit happens earliest, do the
+  // swap (in that race-time order), emit its next stint.
+  // a team's pit time for the stint it just finished = current teamCum + pit lap.
+  function pitTimeOf(tn){ return teamCum[tn]; } // time when team enters box after current stint
+  let remaining = nTeams*(STINTS_PER_TEAM-1); // total swaps
+  // each team has finished stint `nextStint[tn]`; its pending pit (if any) is to start stint nextStint+1
+  while(remaining>0){
+    // pick the team with the earliest pending pit (that still has stints left)
+    let pick=null, best=Infinity;
+    teamNames.slice(0,nTeams).forEach(tn=>{
+      if(nextStint[tn] < STINTS_PER_TEAM-1){
+        const tt=pitTimeOf(tn);
+        if(tt<best){ best=tt; pick=tn; }
+      }
+    });
+    if(!pick) break;
+    // do the swap for `pick`: return its kart, take a random boxed one
+    const st=nextStint[pick]+1;
+    const handBack=stintKart[pick][st-1];
+    const idx=Math.floor(Math.random()*box.length);
+    const taken=box[idx];
+    box.splice(idx,1); box.push(handBack);
+    stintKart[pick][st]=taken;
+    // pit lap time, then emit the new stint
+    const pitLap=+(79+Math.random()*3).toFixed(3);
+    teamCum[pick]+=pitLap;          // pit lap adds to cumulative
+    stintLaps[pick]._pit=stintLaps[pick]._pit||{}; stintLaps[pick]._pit[st-1]=pitLap;
+    emitStint(pick,st);
+    nextStint[pick]=st;
+    remaining--;
+  }
+
+  // (3) assemble result/tags/truth in stint order, inserting pit laps between stints
+  const result={}, dTags={}, kTags={}, truth={karts:{},drivers:{},physKart:{},
+    pool:karts.map(k=>k.no), boxStart:karts.slice(nTeams).map(k=>k.no)};
+  karts.forEach(k=>truth.karts[k.no]=k.offset);
+  drivers.forEach(d=>truth.drivers[d.name]=d.skill);
+  teamNames.slice(0,nTeams).forEach(tn=>{
+    result[tn]=[]; dTags[tn]=[]; kTags[tn]=[]; truth.physKart[tn]=[];
+    for(let st=0;st<STINTS_PER_TEAM;st++){
+      const laps=stintLaps[tn][st]||[];
+      laps.forEach(l=>result[tn].push(l));
+      dTags[tn].push(plan[tn][st].drv.name);
+      kTags[tn].push(stintKart[tn][st].no);
+      truth.physKart[tn].push(stintKart[tn][st].no);
+      if(st<STINTS_PER_TEAM-1){
+        const pl=(stintLaps[tn]._pit&&stintLaps[tn]._pit[st]!=null)?stintLaps[tn]._pit[st]:+(79+Math.random()*3).toFixed(3);
+        result[tn].push(pl);
+      }
+    }
+  });
+  return {result,dTags,kTags,truth};
+}
+function _legacySimTail(){ /* removed */ }
+
+// === REAL RACE — Kart-Bahn Wohlen Turbo-Kart, 28.06.2026 ====================
+// Transcribed from the official timing printout. Five karts → five teams.
+// Kart→team: #54 STMracing, #55 DRS, #69 NPCracing, #63 bitshift, #64 Infernale.
+// Lap 0 is the standing-start grid-crossing value. Times in seconds.
+// (Photos may be re-supplied later for verification of individual values.)
+const REAL_RACE = {
+  "STMracing": { kart:54, laps:[
+    3.516,56.410,52.122,52.301,51.971,51.751,51.929,52.610,52.049,51.936,
+    52.143,52.261,52.485,52.389,52.585,51.995,53.012,52.301,52.192,52.078,
+    51.605,52.188,52.303,79.909,55.594,54.198,53.766,53.916,53.817,53.894,
+    52.982,53.568,53.349,53.764,53.364,53.457,53.759,53.265,
+    53.797,54.633,54.513,53.095,53.715,53.194,79.818,53.277,52.288,51.578,
+    51.644,51.288,51.909,51.795,51.405,51.321,51.681,53.374,52.049,51.252,
+    50.886,51.197,51.235,51.021,51.590,50.939,51.441,51.223,51.905,51.599,
+    80.488,52.094,51.298,51.942,51.418,51.500,52.066,51.388,51.444,51.974,
+    51.856,52.067,52.261,52.148,52.033,52.671,52.022,51.998,52.330,51.627,
+    53.076,52.965,51.853,51.999,51.702,79.011,54.571,53.834,54.068,53.576,
+    53.474,53.080,53.473,53.148,53.794,53.254,52.913,53.686,
+    53.734,53.726,53.217,53.677,53.239,52.867,53.143,53.938,53.831,54.259,
+    52.997,53.057,53.693,81.735,51.507,51.210,54.666,52.558,51.143,50.798,
+    50.811,50.784,50.958,51.251,51.026,50.566,50.939,51.040,51.339
+  ]},
+  "DRS": { kart:55, laps:[
+    2.693,55.431,51.608,51.402,51.153,52.044,51.191,51.080,51.307,51.096,
+    51.717,51.532,51.584,51.947,51.540,51.420,51.477,51.597,50.872,52.584,
+    51.131,51.244,51.388,51.772,81.047,62.783,53.392,53.021,53.144,52.668,
+    52.620,52.880,52.988,53.182,52.677,52.608,53.302,53.555,
+    53.453,53.306,52.897,52.852,52.433,79.707,53.861,53.929,52.052,51.675,
+    52.589,51.996,51.988,52.095,52.185,52.388,51.799,52.039,51.860,52.204,
+    52.561,52.177,51.925,52.502,52.807,80.544,53.866,53.429,53.482,53.158,
+    52.956,53.079,52.775,54.690,52.887,52.933,52.826,52.912,54.432,58.968,
+    53.779,53.069,53.268,53.601,52.792,81.326,54.026,52.501,52.253,53.348,
+    52.165,52.313,52.666,52.350,53.109,53.789,52.917,52.821,53.064,53.115,
+    52.772,52.888,52.629,54.016,53.681,52.695,54.388,52.517,
+    53.409,52.896,52.989,52.965,54.436,82.380,53.373,52.633,52.609,52.299,
+    52.284,52.351,52.529,52.296,52.440,52.304,52.368,52.710,52.584,52.907,
+    52.080,52.160,52.662,52.701,52.537,52.407,52.811,52.429,51.902
+  ]},
+  "NPCracing": { kart:69, laps:[
+    3.393,57.918,55.472,51.572,52.269,51.730,51.993,52.279,52.874,52.119,
+    51.666,51.523,51.430,51.823,51.455,51.476,51.061,51.671,51.476,51.258,
+    51.193,51.018,52.129,52.122,51.623,51.514,51.788,51.630,51.945,51.880,
+    51.524,51.421,51.616,51.609,51.635,51.491,79.899,54.454,
+    54.390,54.888,54.803,54.272,54.908,53.947,53.198,53.720,53.388,53.889,
+    53.644,53.610,53.619,81.234,56.123,54.873,57.174,56.333,55.189,56.089,
+    55.235,55.478,55.423,55.766,55.798,55.487,55.884,55.233,55.991,84.192,
+    53.282,53.030,53.513,53.066,53.293,52.512,52.002,53.278,54.016,52.911,
+    52.870,53.043,52.517,52.312,51.950,52.489,80.172,56.154,55.315,54.221,
+    53.705,53.678,54.578,54.265,53.404,55.280,55.146,54.438,54.536,53.302,
+    84.999,52.054,51.062,51.173,51.545,51.337,51.068,51.149,
+    51.209,51.257,50.551,50.891,50.807,50.918,51.037,51.099,51.124,51.041,
+    51.429,51.625,52.299,51.152,52.781,51.330,51.023,51.120,50.805,51.509,
+    50.834,50.871,50.767,50.986,50.810,50.814,51.016,51.707
+  ]},
+  "bitshift": { kart:63, laps:[
+    4.589,61.430,58.526,59.419,59.047,56.508,89.806,52.965,52.126,52.161,
+    52.500,52.297,52.139,51.995,52.172,51.964,52.101,52.038,52.133,52.542,
+    80.802,59.479,57.405,57.598,57.122,58.087,56.489,56.188,59.141,76.813,
+    57.191,57.281,56.969,82.890,52.513,52.317,51.281,51.436,
+    51.229,51.279,51.078,51.526,51.164,51.430,51.349,51.574,51.677,51.246,
+    51.226,51.487,51.427,51.186,51.445,52.126,51.169,51.306,51.196,51.781,
+    51.306,51.118,51.211,51.348,51.352,51.416,51.514,51.452,51.556,51.484,
+    51.405,51.523,85.419,56.935,56.765,55.824,55.489,57.543,55.763,54.973,
+    54.686,55.385,56.520,55.523,92.315,57.198,61.337,56.817,56.866,56.768,
+    56.277,56.530,55.719,55.477,56.424,57.391,56.771,56.408,55.692,87.241,
+    52.024,52.163,51.587,51.647,51.457,51.339,51.354,51.599,
+    51.489,51.511,51.636,52.114,77.869,57.792,58.050,54.968,55.207,56.055,
+    56.541,57.199,56.163,65.547,55.480,54.966,54.952,55.900,55.686,54.151,
+    55.141,55.515,56.691
+  ]},
+  "Infernale": { kart:64, laps:[
+    4.485,61.603,62.330,56.189,57.488,55.815,55.774,55.134,56.495,56.255,
+    56.332,56.978,58.405,62.101,92.621,63.569,60.069,57.874,55.918,69.967,
+    57.407,56.849,58.373,56.715,56.313,55.576,55.547,57.840,55.453,55.170,
+    54.962,55.271,54.737,54.932,55.766,87.654,73.619,69.920,
+    71.018,69.581,69.818,68.371,67.082,68.547,68.234,66.525,67.308,65.318,
+    67.195,94.320,53.976,53.113,52.080,52.589,52.511,52.855,52.528,52.736,
+    52.750,52.697,51.579,52.963,52.698,53.178,53.496,52.396,52.388,52.581,
+    79.430,60.004,56.346,55.228,55.643,53.958,53.856,52.684,52.794,52.958,
+    52.612,56.623,52.456,52.345,53.844,54.219,52.678,52.243,52.358,51.866,
+    52.539,53.026,81.028,56.641,55.969,54.836,54.567,54.848,54.187,64.900,
+    61.752,54.027,54.077,53.285,63.060,54.802,53.471,79.946,
+    55.067,54.296,54.266,54.050,53.432,54.748,53.563,53.456,53.366,53.678,
+    54.958,53.712,53.698,53.941,53.951,54.485,64.440,54.327,53.467
+  ]},
+  "Kolbenfresser": { kart:57, laps:[
+    0,53.259,49.746,49.58,49.358,49.317,49.514,49.547,49.462,49.401,
+    49.469,49.25,49.671,49.33,49.382,49.684,49.454,49.254,49.167,49.406,
+    49.316,49.225,49.059,50.702,49.668,49.868,49.587,49.422,49.3,50.116,
+    49.616,49.3,49.18,49.289,49.383,49.266,49.372,49.248,49.377,49.327,
+    49.217,49.19,49.155,49.519,49.311,49.388,49.305,49.217,49.105,49.855,
+    49.602,49.586,49.198,49.55,49.085,48.95,49.364,49.118,49.151,49.364,
+    49.173,49.892,49.978,49.167,49.078,49.325,49.09,49.066,49.137,48.899,
+    49.561,48.989,49.049,49.221,49.317,49.644,78.12,51.707,50.771,50.781,
+    52.199,50.596,50.784,50.886,51.475,52.047,50.514,51.517,50.664,50.902,
+    50.761,77.71,51.577,51.027,50.827,50.891,78.086,51.092,50.23,50.187,
+    50.346,50.779,50.356,50.334,51.228,50.387,50.956,50.812,50.718,80.521,
+    51.131,50.547,50.292,50.508,50.321,50.314,50.34,50.235,50.205,50.45,
+    50.098,50.535,50.108,50.159,50.22,50.299,78.021,50.717,50.341,50.07,
+    50.124,49.985,50.114,51.436,50.21,50.177,51.908,51.978,56.886,58.62,
+    57.633
+  ]},
+  "BambiRacing": { kart:51, laps:[
+    0.092,53.858,49.756,49.593,49.558,49.716,49.8,51.044,49.523,49.532,
+    49.71,49.723,49.646,49.692,49.631,49.826,49.59,49.9,51.098,49.592,
+    49.546,50.311,49.434,49.522,49.773,49.558,49.78,49.711,49.75,49.579,
+    49.621,49.902,50.09,49.492,49.553,49.607,49.964,49.485,49.717,49.589,
+    49.692,49.646,49.683,49.793,49.49,49.541,49.531,49.683,49.813,50.081,
+    50.122,49.703,49.708,49.746,49.626,49.551,49.469,75.389,51.919,50.772,
+    52.484,50.974,51.644,50.813,50.787,50.906,78.366,51.898,50.615,51.114,
+    50.658,50.549,50.691,50.63,50.768,50.63,50.782,50.7,50.5,50.698,
+    50.539,50.699,50.734,50.719,50.973,50.742,50.716,50.567,50.656,50.587,
+    51.149,50.748,50.933,50.79,78.431,50.669,50.248,50.128,50.338,50.218,
+    50.205,50.787,50.189,50.35,50.297,50.227,50.172,50.427,50.197,50.253,
+    50.25,50.385,50.502,50.499,50.298,50.234,50.22,50.287,50.241,50.349,
+    50.244,50.449,76.668,51.849,50.771,50.723,50.648,50.603,50.455,50.532,
+    50.576,50.522,78.774,51.372,51.098,51.106,51.28,50.977,51.066,51.27,
+    51.298
+  ]},
+  "NosBros": { kart:58, laps:[
+    2.361,54.624,51.814,51.402,79.285,51.463,50.358,50.008,50.153,50.049,
+    49.993,50.041,50.061,51.07,50.237,49.908,49.797,49.931,49.959,50.042,
+    49.978,49.717,50.479,49.973,50.099,49.965,49.912,50.013,50.061,50.576,
+    49.939,49.766,49.796,50.78,50.98,50.066,49.917,50.003,50.031,50.077,
+    49.708,49.837,49.966,49.659,49.783,49.881,50.016,49.759,50.153,49.763,
+    55.228,49.962,49.836,49.936,49.869,72.506,52.86,51.418,52.896,51.93,
+    51.666,77.308,51.378,50.947,50.75,51.192,50.805,50.523,50.795,50.717,
+    77.465,50.7,50.342,50.234,50.258,50.06,50.242,50.165,50.154,50.624,
+    50.083,50.309,50.168,50.083,50.309,50.168,50.115,50.156,50.357,50.528,
+    50.185,51.5,50.709,50.332,50.277,50.224,50.133,50.089,50.309,50.56,
+    50.32,50.158,50.188,50.209,49.984,50.209,50.155,50.115,50.132,50.252,
+    50.091,50.398,50.063,50.013,50.658,50.05,50.069,50.146,50.04,50.316,
+    49.978,50.065,49.895,50.099,50.001,50.057,50.394,78.559,51.681,51.293,
+    51.098,51.978,51.194,51.123,51.461,51.18,51.397,51.261,51.789,51.197,
+    51.352
+  ]},
+  "VollGas": { kart:50, laps:[
+    1.292,54.166,51.562,50.687,50.477,50.716,50.501,50.599,50.429,50.77,
+    50.339,50.505,50.38,50.559,50.582,50.493,51.138,50.684,50.533,50.695,
+    50.518,50.356,50.388,50.591,50.486,50.639,51.641,50.604,50.596,50.634,
+    50.564,50.74,50.508,50.585,50.442,50.614,79.614,51.963,51.635,51.394,
+    51.894,51.433,51.493,51.581,51.868,51.383,51.848,51.687,52.055,77.101,
+    51.623,51.638,51.251,50.781,50.587,50.427,50.379,52.364,50.586,50.511,
+    50.694,50.784,51.05,50.595,50.47,50.575,50.528,50.525,51.002,50.824,
+    50.65,50.672,50.67,50.693,50.879,50.704,51.399,51.287,51.565,52.05,
+    50.541,50.703,50.815,50.662,50.576,50.619,81.295,50.873,50.143,50.303,
+    50.033,49.955,51.108,50.016,49.929,50.067,50.887,50.655,49.856,50.402,
+    50.046,50.339,50.201,50.337,50.209,50.105,50.11,50.919,50.262,50.289,
+    50.162,50.22,50.063,50.013,49.983,49.993,50.069,76.255,50.04,50.154,
+    50.204,50.076,49.995,50.188,50.218,49.878,50.666,51.081,50.047,50.09,
+    50.102,49.912,51.116,50.3,50.697,50.872,50.784,50.94,50.988
+  ]},
+  "LowBudgetRacing": { kart:53, laps:[
+    1.172,54.166,51.975,50.908,50.823,50.603,50.972,51.068,51.021,50.999,
+    51.205,50.967,50.973,51.193,51.247,50.722,50.954,50.805,51.027,50.937,
+    50.989,50.889,50.804,50.895,51.079,51.036,51.235,50.961,51.333,50.788,
+    50.677,50.953,50.726,50.905,78.176,50.649,49.971,52.148,52.849,50.782,
+    49.872,49.786,49.997,50.537,49.818,49.849,50.095,50.309,50.075,49.857,
+    50.563,49.982,49.901,49.783,50.201,49.705,49.696,49.853,50.163,49.793,
+    49.98,50.349,49.768,49.765,49.654,49.772,49.557,49.756,75.636,51.521,
+    50.82,50.786,50.896,51.39,50.888,50.811,50.884,50.698,50.95,50.598,
+    50.807,51.982,50.955,50.943,51.292,50.753,50.81,50.707,50.86,50.816,
+    51.191,76.699,51.418,50.847,50.86,50.829,50.973,52.031,50.863,51.172,
+    52.417,81.904,51.693,51.491,51.427,52.048,51.665,51.271,51.2,51.348,
+    51.342,51.522,51.155,51.168,51.438,50.906,51.106,51.201,51.166,50.996,
+    51.905,78.242,51.223,50.574,50.44,50.531,50.301,50.351,50.214,50.223,
+    51.171,50.455,50.43,50.643,50.705,50.352,50.282,50.82,50.363,50.316
+  ]},
+  "DriftHappens": { kart:52, laps:[
+    3.111,57.641,53.147,52.515,52.262,52.37,52.419,53.01,53.086,53.15,
+    52.161,52.466,52.525,53.575,52.639,52.42,52.559,52.765,52.817,52.513,
+    79.421,51.954,50.59,52.005,50.509,51.155,50.622,50.442,50.826,51.492,
+    50.792,50.483,50.514,50.51,50.942,50.335,50.442,50.28,50.689,50.777,
+    50.503,50.66,50.427,51.116,50.72,50.758,50.492,50.436,50.309,50.075,
+    50.345,50.964,51.05,50.657,50.6,51.141,50.561,50.7,50.796,50.717,
+    51.126,50.637,50.487,78.467,52.478,52.106,51.593,51.599,52.046,51.036,
+    51.165,51.302,51.571,51.456,51.492,51.505,51.143,51.199,51.44,51.333,
+    51.587,51.436,51.487,51.519,51.73,51.484,51.176,51.699,51.234,51.253,
+    51.489,51.698,51.696,51.628,51.475,52.015,52.319,51.569,51.248,81.302,
+    51.774,51.097,51.14,51.048,52.03,51.095,51.198,51.139,79.196,52.15,
+    51.869,51.449,51.702,51.467,51.498,51.347,51.732,51.396,51.485,51.802,
+    52.651,52.126,51.884,52.359,52.243,52.281,79.048,52.552,50.712,51.073,
+    50.431,50.016,50.617,50.373,50.108,49.896,51.17,50.147
+  ]},
+  "UnsafeBros": { kart:56, laps:[
+    2.109,55.813,51.361,51.749,51.087,51.408,51.216,51.187,51.087,50.969,
+    51.334,50.941,50.819,50.871,51.636,50.961,50.908,50.844,50.862,51.131,
+    51.09,50.969,50.83,51.04,50.861,50.916,51.058,51.99,51.559,51.052,
+    50.813,50.949,51.096,51.738,50.875,51.047,50.664,50.93,50.817,50.743,
+    51.376,50.688,76.739,52.353,52.617,51.639,51.373,51.393,51.638,51.638,
+    51.97,51.285,51.575,51.385,51.57,51.694,51.704,51.499,51.539,53.403,
+    52.031,51.982,51.406,51.359,51.325,51.339,51.432,51.912,51.157,51.388,
+    51.074,51.986,51.492,51.505,51.143,51.199,50.969,51.071,51.369,51.462,
+    51.488,51.704,51.226,51.226,52.449,51.569,51.377,51.039,51.213,51.253,
+    51.489,51.698,51.696,51.628,53.224,53.49,52.08,52.32,52.558,52.464,
+    52.219,52.467,53.504,52.586,52.165,51.94,52.435,51.839,52.419,51.914,
+    51.723,52.15,51.869,51.467,51.498,51.347,51.732,51.396,51.485,51.802,
+    52.651,52.126,51.884,52.359,52.243,52.281,79.341,52.552,52.122,52.757,
+    52.414,52.177,52.41,52.215,52.272,52.477,53.177
+  ]},
+  "LeftBrakers": { kart:60, laps:[
+    1.606,55.965,51.457,52.327,51.515,51.807,51.297,51.468,51.509,51.577,
+    51.579,52.093,51.641,51.582,51.506,51.748,51.713,51.479,51.787,51.713,
+    51.492,51.416,53.049,51.614,51.941,52.425,52.008,79.225,52.016,51.455,
+    51.794,51.014,51.406,52.844,51.287,51.299,52.21,51.112,51.979,51.93,
+    50.96,51.327,51.623,51.33,52.082,51.78,51.501,78.944,52.297,52.287,
+    52.608,52.688,52.202,52.459,52.352,52.236,53.625,52.607,52.546,52.541,
+    52.255,52.382,51.809,52.174,53.157,52.655,52.566,52.607,52.563,52.872,
+    52.752,52.823,53.011,53.003,52.956,52.706,81.807,51.616,51.467,52.268,
+    50.664,51.017,51.71,50.893,50.829,50.855,51.101,51.432,51.066,50.881,
+    50.993,50.92,51.107,51.253,51.091,51.183,52.843,78.494,52.12,51.228,
+    51.43,52.056,51.534,51.954,51.653,51.815,51.743,52.424,51.855,51.644,
+    52.03,52.45,52.012,51.731,52.128,51.988,51.67,51.93,52.19,51.576,
+    51.752,78.35,51.598,51.038,51.187,51.463,51.131,51.135,52.296,52.122,
+    51.323,51.141,51.25,51.328,51.213,51.804,51.434,50.967,51.244
+  ]},
+  "PistonCupRejects": { kart:59, laps:[
+    4.967,57.047,53.238,52.577,81.565,54.882,52.671,52.283,52.861,52.746,
+    52.291,52.117,52.302,52.41,51.928,51.936,52.47,52.109,52.909,52.416,
+    51.964,51.992,52.474,52.58,52.093,52.499,52.235,52.905,52.075,52.235,
+    52.495,78.5,52.798,52.784,51.288,51.299,51.624,51.608,51.726,51.808,
+    51.76,51.853,51.434,51.27,52.347,51.638,51.654,51.578,51.718,52.295,
+    51.344,51.628,51.629,51.68,52.332,51.34,51.703,51.544,51.473,51.563,
+    51.596,51.354,52.442,51.512,51.86,51.376,76.236,52.275,51.376,51.593,
+    52.111,51.93,52.698,51.543,51.71,52.078,51.913,51.785,52.177,52.389,
+    52.88,51.815,52.141,53.628,53.113,52.94,79.94,52.066,51.616,51.274,
+    51.333,51.495,51.504,51.307,51.636,51.208,51.277,51.126,51.426,51.393,
+    51.36,51.373,51.676,51.302,51.294,51.214,51.355,51.502,51.935,51.116,
+    51.728,51.376,51.169,51.242,51.669,52.398,51.327,51.854,51.701,51.663,
+    53.101,51.191,77.663,51.191,50.937,50.931,50.858,51.112,50.761,51.128,
+    51.244,50.803
+  ]},
+  "IchnusaBoys": { kart:65, laps:[
+    3.237,58.576,52.995,52.562,52.292,52.127,52.323,52.3,51.578,51.496,
+    51.685,51.423,51.909,51.567,51.591,51.324,51.772,52.43,51.347,51.444,
+    51.197,51.122,76.174,51.433,51.882,52.424,51.931,51.345,50.889,51.158,
+    50.858,51.66,51.3,53.198,51.127,51.362,51.244,50.923,79.294,53.056,
+    52.304,52.168,52.197,52.595,52.563,52.051,51.999,53.124,53.5,52.99,
+    52.543,51.988,52.43,52.209,52.717,52.115,53.623,52.054,53.778,52.481,
+    52.293,52.133,52.247,52.401,52.368,52.595,53.047,53.524,52.918,52.408,
+    52.492,52.361,52.112,52.258,78.641,51.074,50.718,50.279,51.205,51.655,
+    50.364,50.264,50.517,50.517,50.843,51.086,50.596,51.186,50.93,50.916,
+    51.499,50.701,50.545,51.015,50.676,50.731,78.289,51.32,50.94,51.184,
+    50.978,50.95,51.363,51.085,51.026,50.776,50.704,50.906,50.914,50.597,
+    50.83,50.645,50.977,50.877,51.569,51.153,51.224,50.542,51.057,50.915,
+    51.101,51.015,50.878,51.285,77.745,52.396,52.254,51.643,51.921,82.531,
+    52.328,52.651,51.346,51.696,51.664,51.937,51.885
+  ]}
+};
+
+function loadRealRace(){
+  const names=Object.keys(REAL_RACE);
+  document.getElementById("raw").value=names.map(n=>`${n}: ${REAL_RACE[n].laps.join(", ")}`).join("\n");
+  driverTags={}; kartTags={};
+  ingest();   // freezes original + renders the Data view
+  // the printout is per kart, so each team's kart is constant — tag every stint with it.
+  names.forEach(n=>{
+    const laps=(activeKarts()[n])||REAL_RACE[n].laps;
+    const st=splitStints(laps);
+    kartTags[n]=st.map(()=>String(REAL_RACE[n].kart));
+  });
+  if(state.originalTags) state.originalTags.kartTags=JSON.parse(JSON.stringify(kartTags));
+}
+
+// ============================================================================
+//  RACE DIRECTOR — configure kart pool, teams, drivers, then generate a race
+// ============================================================================
+// directorConfig drives simulateRace when present. The user edits it here; the
+// "Generate race" button runs the sim with exactly this setup.
+let directorConfig = null;
+
+const DEFAULT_TEAM_NAMES=["Team LX","Schall&Rauch","Affoltern RT","Polaris GP","KuBaA Crew","District 11","Furttal RT","Käfer Cup","Glattal GP","Reppisch Racing","Limmat Lions","Bünzli Boys","Säuliamt SC","Wohlen Werks","Heitersberg","Mutschellen","Bremgarten BR"];
+
+// build a fresh default config: n teams on karts taken from the pool, 2 drivers each
+function defaultDirectorConfig(nTeams=6){
+  const poolLo=50, poolHi=69;
+  const pool=[]; for(let k=poolLo;k<=poolHi;k++) pool.push(String(k));
+  const teams=[];
+  for(let i=0;i<nTeams;i++){
+    const name=DEFAULT_TEAM_NAMES[i]||("Team "+(i+1));
+    teams.push({ name, startKart:String(poolLo+i), nDrivers:2, drivers:[] });
+  }
+  // 3 box karts = first 3 pool numbers not used as a start kart
+  const used=new Set(teams.map(t=>t.startKart));
+  const box=pool.filter(k=>!used.has(k)).slice(0,3);
+  return { pool, boxKarts:box, teams, stints:6 };
+}
+
+// default driver name for an un-named slot: "TeamName#N"
+function driverName(team, idx){
+  const d=team.drivers&&team.drivers[idx];
+  return (d&&d.trim()) ? d.trim() : team.name+"#"+(idx+1);
+}
+
+// parse quick-entry lines like  DRS#55(2)  or  BambiRacing#51(3)
+// → {name:"DRS", startKart:"55", nDrivers:2}
+function parseDirectorLines(text){
+  const out=[];
+  text.split(/[\n;]+/).forEach(line=>{
+    line=line.trim(); if(!line) return;
+    const m=line.match(/^(.+?)#(\w+)(?:\s*\((\d+)\))?$/);
+    if(m){ out.push({ name:m[1].trim(), startKart:m[2], nDrivers:m[3]?Math.max(1,+m[3]):2, drivers:[] }); }
+  });
+  return out;
+}
+
+function ensureDirectorConfig(){
+  if(!directorConfig) directorConfig=defaultDirectorConfig(6);
+  return directorConfig;
+}
+
+// --- mutations from the UI ---
+function dirSetTeamField(i,field,val){
+  const c=ensureDirectorConfig();
+  if(!c.teams[i])return;
+  if(field==="nDrivers"){ c.teams[i].nDrivers=Math.max(1,Math.min(5,parseInt(val,10)||1)); }
+  else c.teams[i][field]=val;
+  renderDirectorView();
+}
+function dirSetDriverName(ti,di,val){
+  const c=ensureDirectorConfig();
+  const t=c.teams[ti]; if(!t)return;
+  t.drivers=t.drivers||[]; t.drivers[di]=val;
+  // no full re-render (keeps focus); the value is stored
+}
+function dirAddTeam(){
+  const c=ensureDirectorConfig();
+  const i=c.teams.length;
+  const name=DEFAULT_TEAM_NAMES[i]||("Team "+(i+1));
+  const used=new Set(c.teams.map(t=>t.startKart));
+  const free=c.pool.find(k=>!used.has(k))||c.pool[0]||"50";
+  c.teams.push({name, startKart:free, nDrivers:2, drivers:[]});
+  renderDirectorView();
+}
+function dirRemoveTeam(i){
+  const c=ensureDirectorConfig();
+  c.teams.splice(i,1); renderDirectorView();
+}
+function dirSetPool(text){
+  const c=ensureDirectorConfig();
+  const nums=text.split(/[\s,;]+/).map(s=>s.trim()).filter(Boolean);
+  if(nums.length) c.pool=nums;
+  renderDirectorView();
+}
+function dirSetBox(text){
+  const c=ensureDirectorConfig();
+  c.boxKarts=text.split(/[\s,;]+/).map(s=>s.trim()).filter(Boolean);
+  renderDirectorView();
+}
+function dirSetStints(val){
+  const c=ensureDirectorConfig();
+  c.stints=Math.max(2,Math.min(12,parseInt(val,10)||6));
+  renderDirectorView();
+}
+function dirApplyQuick(){
+  const ta=document.getElementById("dirQuick");
+  const parsed=parseDirectorLines(ta.value);
+  if(!parsed.length){ return; }
+  const c=ensureDirectorConfig();
+  c.teams=parsed;
+  // any start kart not in the pool → add it to the pool
+  parsed.forEach(t=>{ if(!c.pool.includes(t.startKart)) c.pool.push(t.startKart); });
+  // refresh box karts: 3 pool numbers not used as a start kart
+  const used=new Set(c.teams.map(t=>t.startKart));
+  c.boxKarts=c.pool.filter(k=>!used.has(k)).slice(0,3);
+  renderDirectorView();
+}
+function dirReset(){ directorConfig=defaultDirectorConfig(6); renderDirectorView(); }
+
+// validate + run the sim from the director config
+function dirGenerate(){
+  const c=ensureDirectorConfig();
+  // basic validation
+  const errs=[];
+  if(c.teams.length<2) errs.push("Need at least 2 teams.");
+  const starts=c.teams.map(t=>t.startKart);
+  if(new Set(starts).size!==starts.length) errs.push("Two teams share the same start kart.");
+  c.teams.forEach(t=>{ if(!c.pool.includes(t.startKart)) errs.push(t.name+" starts on kart "+t.startKart+" which isn't in the pool."); });
+  if(c.boxKarts.length<1) errs.push("Need at least 1 box kart.");
+  if(c.pool.length < c.teams.length + 1) errs.push("Pool too small: need more karts than teams (plus box).");
+  const box=document.getElementById("dirErr");
+  if(errs.length){ if(box) box.innerHTML=errs.map(e=>`<div class="dir-err-line">⚠ ${e}</div>`).join(""); return; }
+  if(box) box.innerHTML="";
+  const sim=simulateRace(c.teams.length, c);
+  document.getElementById("raw").value=Object.entries(sim.result).map(([k,v])=>`${k}: ${v.join(", ")}`).join("\n");
+  driverTags=sim.dTags; kartTags=sim.kTags; window._truth=sim.truth;
+  ingest();          // freeze + render data view
+  showView("race");  // jump to results
+}
+
+function renderDirectorView(){
+  const c=ensureDirectorConfig();
+  const el=document.getElementById("view-director");
+  const poolStr=c.pool.join(", ");
+  const boxStr=c.boxKarts.join(", ");
+  const kartOpts=k=>c.pool.map(p=>`<option value="${p}"${p===k?" selected":""}>${p}</option>`).join("");
+
+  const teamRows=c.teams.map((t,i)=>{
+    const drvInputs=Array.from({length:t.nDrivers},(_,di)=>{
+      const ph=t.name+"#"+(di+1);
+      const val=(t.drivers&&t.drivers[di])?t.drivers[di].replace(/"/g,"&quot;"):"";
+      return `<input class="dir-drv" value="${val}" placeholder="${ph}" onchange="dirSetDriverName(${i},${di},this.value)">`;
+    }).join("");
+    return `<tr>
+      <td><input class="dir-name" value="${t.name.replace(/"/g,"&quot;")}" onchange="dirSetTeamField(${i},'name',this.value)"></td>
+      <td><select class="dir-kart" onchange="dirSetTeamField(${i},'startKart',this.value)">${kartOpts(t.startKart)}</select></td>
+      <td><input class="dir-num" type="number" min="1" max="5" value="${t.nDrivers}" onchange="dirSetTeamField(${i},'nDrivers',this.value)"></td>
+      <td class="dir-drvcell">${drvInputs}</td>
+      <td><button class="dir-x" onclick="dirRemoveTeam(${i})" title="Remove team">✕</button></td>
+    </tr>`;
+  }).join("");
+
+  el.innerHTML=`${vbar()}
+    <section>
+      <div class="sec-head"><span class="n">—</span><h2>Race Director</h2><span class="note">configure the field, then generate a race</span></div>
+      <div class="dir-intro">Set up the kart pool, the teams (each with a start kart and driver count), then hit <b>Generate</b>.
+        Karts rotate through the box on every pit stop — the Kart Detektiv will try to recover who ended up on what.
+        Leave a driver name blank and it defaults to <code>Team#N</code>.</div>
+
+      <div class="dir-grid">
+        <div class="dir-field">
+          <label>Kart pool <span class="dir-hint">(all physical karts in play)</span></label>
+          <input class="dir-wide" id="dirPool" value="${poolStr}" onchange="dirSetPool(this.value)">
+        </div>
+        <div class="dir-field">
+          <label>Box karts <span class="dir-hint">(start in the box, ⅓ pick each stop)</span></label>
+          <input class="dir-wide" id="dirBox" value="${boxStr}" onchange="dirSetBox(this.value)">
+        </div>
+        <div class="dir-field dir-field-sm">
+          <label>Stints / team</label>
+          <input class="dir-num" type="number" min="2" max="12" value="${c.stints}" onchange="dirSetStints(this.value)">
+        </div>
+      </div>
+
+      <div class="dir-tablewrap">
+        <table class="dir-table">
+          <thead><tr><th>Team</th><th>Start kart</th><th>Drivers</th><th>Driver names <span class="dir-hint">(blank → Team#N)</span></th><th></th></tr></thead>
+          <tbody>${teamRows}</tbody>
+        </table>
+      </div>
+      <div class="dir-actions">
+        <button class="dir-add" onclick="dirAddTeam()">+ Add team</button>
+        <button class="ghost sm" onclick="dirReset()">Reset</button>
+      </div>
+
+      <details class="dir-quick">
+        <summary>Quick entry — paste lines like <code>DRS#55(2)</code></summary>
+        <div class="dir-quickbody">
+          <textarea id="dirQuick" placeholder="DRS#55(2)
+BambiRacing#51(3)
+Kolbenfresser#57(2)"></textarea>
+          <button class="ghost sm" onclick="dirApplyQuick()">Apply lines</button>
+          <div class="dir-hint">Format: <code>TeamName#StartKart(Drivers)</code>. Drivers optional, defaults to 2.</div>
+        </div>
+      </details>
+
+      <div id="dirErr" class="dir-errbox"></div>
+      <div class="dir-gen"><button class="dir-generate" onclick="dirGenerate()">Generate race →</button>
+        <span class="dir-hint">${c.teams.length} teams · ${c.pool.length} karts · ${c.boxKarts.length} in box · ${c.stints} stints</span></div>
+    </section>`;
+}
+
+// ============================================================================
+//  PRODUCT — go-live planning board (stakeholders · roadmap · checklist)
+// ============================================================================
+// Persisted to localStorage so the plan survives reloads. Three sections, all
+// editable inline. Pre-filled with a Kartbahn-Wohlen launch plan.
+const PRODUCT_KEY="wohlen_product_plan_v1";
+
+function defaultProductPlan(){
+  return {
+    stakeholders:[
+      {who:"Kartbahn Wohlen (Betrieb)", role:"Daten- & Markenfreigabe", need:"Offizielle Timing-Daten dürfen genutzt werden; Logo/Name ok", status:"open"},
+      {who:"Renn-Teams / Fahrer", role:"Endnutzer", need:"Wollen ihre Stints, Pace & Kart-Analyse sehen; Datenschutz der Namen", status:"open"},
+      {who:"Schall & Rauch / 3D-Band Crew", role:"Beta-Tester & Community", need:"Früher Zugang, Feedback, teilen in der Szene", status:"progress"},
+      {who:"LX (Entwicklung)", role:"Owner / Build", need:"Stabiler Stand, Tests grün, Deployment-Weg", status:"progress"},
+      {who:"MyLaps / Timing-Anbieter", role:"Datenquelle", need:"Klärung Nutzungsrechte der Ausdrucke/Exports", status:"open"},
+    ],
+    milestones:[
+      {title:"Echte 28.06-Daten finalisieren", date:"2026-07-05", note:"Restliche 3 Spalten (#50,#59,#60) sauber validieren", status:"progress"},
+      {title:"Kart-Detektiv Soundness-Review", date:"2026-07-08", note:"0 falsche Ausschlüsse, Confidence-Verhalten dokumentieren", status:"done"},
+      {title:"Beta mit 2–3 Teams", date:"2026-07-15", note:"Feedback zu UX, Replay, Detektiv einsammeln", status:"open"},
+      {title:"Datenschutz-/Namensfreigabe klären", date:"2026-07-18", note:"Fahrernamen anonymisierbar machen falls nötig", status:"open"},
+      {title:"Öffentlicher Launch", date:"2026-07-25", note:"Link teilen, Ankündigung in der Szene", status:"open"},
+    ],
+    checklist:{
+      "Technik":[
+        {t:"Alle Views rendern fehlerfrei (Integrationstest grün)", done:true},
+        {t:"Replay performant mit 15 Teams", done:true},
+        {t:"Deployment-Ziel festlegen (Static Hosting / eigener Server)", done:false},
+        {t:"Mobile-Layout prüfen", done:false},
+      ],
+      "Daten":[
+        {t:"15 Teams vollständig & validiert", done:false},
+        {t:"Lap-0 / Grid-Start korrekt behandelt", done:true},
+        {t:"Quelle & Lizenz der Timing-Daten geklärt", done:false},
+      ],
+      "Kommunikation":[
+        {t:"Kurzes Erklär-/Intro für neue Nutzer", done:false},
+        {t:"Ankündigungstext für die Szene", done:false},
+        {t:"Feedback-Kanal einrichten", done:false},
+      ],
+      "Recht / Datenschutz":[
+        {t:"Fahrernamen: Einwilligung oder Anonymisierung", done:false},
+        {t:"Marken-/Logonutzung Kartbahn Wohlen geklärt", done:false},
+      ],
+    }
+  };
+}
+
+let productPlan=null;
+function loadProductPlan(){
+  if(productPlan) return productPlan;
+  try{ const raw=localStorage.getItem(PRODUCT_KEY); if(raw){ productPlan=JSON.parse(raw); return productPlan; } }catch(e){}
+  productPlan=defaultProductPlan(); return productPlan;
+}
+function saveProductPlan(){ try{ localStorage.setItem(PRODUCT_KEY, JSON.stringify(productPlan)); }catch(e){} }
+
+const PSTATUS={open:{label:"Offen",cls:"ps-open"},progress:{label:"In Arbeit",cls:"ps-prog"},done:{label:"Erledigt",cls:"ps-done"}};
+function cycleStatus(s){ return s==="open"?"progress":s==="progress"?"done":"open"; }
+
+// --- mutations ---
+function prodSetStake(i,field,val){ const p=loadProductPlan(); if(p.stakeholders[i]){ p.stakeholders[i][field]=val; saveProductPlan(); } }
+function prodCycleStakeStatus(i){ const p=loadProductPlan(); const s=p.stakeholders[i]; if(s){ s.status=cycleStatus(s.status); saveProductPlan(); renderProductView(); } }
+function prodAddStake(){ const p=loadProductPlan(); p.stakeholders.push({who:"Neuer Stakeholder",role:"",need:"",status:"open"}); saveProductPlan(); renderProductView(); }
+function prodDelStake(i){ const p=loadProductPlan(); p.stakeholders.splice(i,1); saveProductPlan(); renderProductView(); }
+
+function prodSetMile(i,field,val){ const p=loadProductPlan(); if(p.milestones[i]){ p.milestones[i][field]=val; saveProductPlan(); if(field!=="title"&&field!=="note"&&field!=="date") renderProductView(); } }
+function prodCycleMileStatus(i){ const p=loadProductPlan(); const m=p.milestones[i]; if(m){ m.status=cycleStatus(m.status); saveProductPlan(); renderProductView(); } }
+function prodAddMile(){ const p=loadProductPlan(); p.milestones.push({title:"Neuer Meilenstein",date:"",note:"",status:"open"}); saveProductPlan(); renderProductView(); }
+function prodDelMile(i){ const p=loadProductPlan(); p.milestones.splice(i,1); saveProductPlan(); renderProductView(); }
+
+function prodToggleCheck(cat,i){ const p=loadProductPlan(); const arr=p.checklist[cat]; if(arr&&arr[i]){ arr[i].done=!arr[i].done; saveProductPlan(); renderProductView(); } }
+function prodAddCheck(cat){ const p=loadProductPlan(); (p.checklist[cat]=p.checklist[cat]||[]).push({t:"Neue Aufgabe",done:false}); saveProductPlan(); renderProductView(); }
+function prodSetCheck(cat,i,val){ const p=loadProductPlan(); if(p.checklist[cat]&&p.checklist[cat][i]){ p.checklist[cat][i].t=val; saveProductPlan(); } }
+function prodDelCheck(cat,i){ const p=loadProductPlan(); p.checklist[cat].splice(i,1); saveProductPlan(); renderProductView(); }
+
+function prodResetPlan(){ productPlan=defaultProductPlan(); saveProductPlan(); renderProductView(); }
+
+function esc(s){ return String(s==null?"":s).replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+
+function renderProductView(){
+  const p=loadProductPlan();
+  const el=document.getElementById("view-product");
+
+  // progress summary across checklist
+  let done=0,total=0;
+  Object.values(p.checklist).forEach(arr=>arr.forEach(it=>{total++; if(it.done)done++;}));
+  const pct=total?Math.round(done/total*100):0;
+  const mDone=p.milestones.filter(m=>m.status==="done").length;
+
+  // stakeholders
+  const stakeRows=p.stakeholders.map((s,i)=>{
+    const st=PSTATUS[s.status]||PSTATUS.open;
+    return `<tr>
+      <td><input class="pr-in pr-strong" value="${esc(s.who)}" onchange="prodSetStake(${i},'who',this.value)"></td>
+      <td><input class="pr-in" value="${esc(s.role)}" onchange="prodSetStake(${i},'role',this.value)"></td>
+      <td><input class="pr-in pr-wide" value="${esc(s.need)}" onchange="prodSetStake(${i},'need',this.value)"></td>
+      <td><button class="pstatus ${st.cls}" onclick="prodCycleStakeStatus(${i})">${st.label}</button></td>
+      <td><button class="pr-x" onclick="prodDelStake(${i})" title="Entfernen">✕</button></td>
+    </tr>`;
+  }).join("");
+
+  // milestones (sorted by date, empty dates last)
+  const order=p.milestones.map((m,i)=>({m,i})).sort((a,b)=>{
+    if(!a.m.date) return 1; if(!b.m.date) return -1; return a.m.date<b.m.date?-1:a.m.date>b.m.date?1:0;
+  });
+  const mileItems=order.map(({m,i})=>{
+    const st=PSTATUS[m.status]||PSTATUS.open;
+    return `<div class="mile ${st.cls}-edge">
+      <button class="mile-dot ${st.cls}" onclick="prodCycleMileStatus(${i})" title="Status wechseln"></button>
+      <div class="mile-body">
+        <div class="mile-top">
+          <input class="pr-in pr-strong mile-title" value="${esc(m.title)}" onchange="prodSetMile(${i},'title',this.value)">
+          <input class="pr-date" type="date" value="${esc(m.date)}" onchange="prodSetMile(${i},'date',this.value)">
+          <button class="pstatus sm ${st.cls}" onclick="prodCycleMileStatus(${i})">${st.label}</button>
+          <button class="pr-x" onclick="prodDelMile(${i})" title="Entfernen">✕</button>
+        </div>
+        <input class="pr-in pr-note" value="${esc(m.note)}" placeholder="Notiz…" onchange="prodSetMile(${i},'note',this.value)">
+      </div>
+    </div>`;
+  }).join("");
+
+  // checklist by category
+  const checkCats=Object.keys(p.checklist).map(cat=>{
+    const items=p.checklist[cat].map((it,i)=>`
+      <li class="${it.done?'ck-done':''}">
+        <button class="ck-box ${it.done?'on':''}" onclick="prodToggleCheck('${cat.replace(/'/g,"\\'")}',${i})">${it.done?'✓':''}</button>
+        <input class="pr-in ck-t" value="${esc(it.t)}" onchange="prodSetCheck('${cat.replace(/'/g,"\\'")}',${i},this.value)">
+        <button class="pr-x" onclick="prodDelCheck('${cat.replace(/'/g,"\\'")}',${i})">✕</button>
+      </li>`).join("");
+    const d=p.checklist[cat].filter(x=>x.done).length, t=p.checklist[cat].length;
+    return `<div class="ck-cat">
+      <div class="ck-cat-head"><h3>${cat}</h3><span class="ck-count">${d}/${t}</span></div>
+      <ul class="ck-list">${items}</ul>
+      <button class="ck-add" onclick="prodAddCheck('${cat.replace(/'/g,"\\'")}')">+ Aufgabe</button>
+    </div>`;
+  }).join("");
+
+  el.innerHTML=`${vbar()}
+    <section>
+      <div class="sec-head"><span class="n">—</span><h2>Product · Go-Live</h2><span class="note">Launch-Planung mit Stakeholdern · lokal gespeichert</span></div>
+
+      <div class="prod-summary">
+        <div class="ps-card"><div class="ps-big">${pct}%</div><div class="ps-lbl">Checkliste erledigt</div><div class="ps-bar"><div class="ps-fill" style="width:${pct}%"></div></div></div>
+        <div class="ps-card"><div class="ps-big">${mDone}/${p.milestones.length}</div><div class="ps-lbl">Meilensteine erreicht</div></div>
+        <div class="ps-card"><div class="ps-big">${p.stakeholders.length}</div><div class="ps-lbl">Stakeholder</div></div>
+        <div class="ps-card ps-reset"><button class="ghost sm" onclick="prodResetPlan()">Plan zurücksetzen</button><div class="ps-lbl">auf Standard</div></div>
+      </div>
+
+      <div class="prod-block">
+        <div class="prod-bh"><h2>Stakeholder</h2><span class="dir-hint">Status anklicken zum Wechseln · Offen → In Arbeit → Erledigt</span></div>
+        <div class="dir-tablewrap"><table class="dir-table prod-table">
+          <thead><tr><th>Wer</th><th>Rolle</th><th>Braucht / Anliegen</th><th>Status</th><th></th></tr></thead>
+          <tbody>${stakeRows}</tbody>
+        </table></div>
+        <button class="dir-add" onclick="prodAddStake()">+ Stakeholder</button>
+      </div>
+
+      <div class="prod-block">
+        <div class="prod-bh"><h2>Go-Live Roadmap</h2><span class="dir-hint">nach Datum sortiert · Punkt anklicken für Status</span></div>
+        <div class="mile-list">${mileItems}</div>
+        <button class="dir-add" onclick="prodAddMile()">+ Meilenstein</button>
+      </div>
+
+      <div class="prod-block">
+        <div class="prod-bh"><h2>Launch-Checkliste</h2><span class="dir-hint">${done}/${total} erledigt</span></div>
+        <div class="ck-grid">${checkCats}</div>
+      </div>
+    </section>`;
+}
+
+function loadDemo(){
+  const sel=document.getElementById("demoTeams");
+  let nTeams=sel?parseInt(sel.value,10):4;
+  if(!Number.isFinite(nTeams)) nTeams=4;
+  nTeams=Math.max(2,Math.min(17,nTeams)); // pool is 20 karts → n+3 ≤ 20 → max 17 teams
+  const sim=simulateRace(nTeams);
+  document.getElementById("raw").value=Object.entries(sim.result).map(([k,v])=>`${k}: ${v.join(", ")}`).join("\n");
+  driverTags=sim.dTags;
+  kartTags=sim.kTags;
+  window._truth=sim.truth; // stash ground truth for the console-curious
+  ingest(); // freezes original (incl. these tags) and renders the Data view
+}
+</script>
+</body>
+</html>

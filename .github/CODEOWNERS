@@ -1,0 +1,23 @@
+# CODEOWNERS — review ownership for tweakch/drs
+# Docs: https://docs.github.com/articles/about-code-owners
+#
+# Listed owners are automatically requested for review on PRs that touch a
+# matching path. The LAST matching pattern wins, so put broad rules first and
+# more specific overrides below.
+#
+# NOTE: "Require review from Code Owners" is intentionally OFF in branch
+# protection right now (solo-friendly, 0-approval self-merge). This file
+# documents ownership and auto-requests reviews; flip that branch-protection
+# setting on once a second reviewer exists to make these owners mandatory.
+
+# Default owner for everything in the repo
+*                           @tweakch
+
+# --- SPDD governance: the source of intent, guard deliberately ---
+/prompts/                   @tweakch
+/prompts/shared/            @tweakch
+/prompts/conventions.md     @tweakch
+/.claude/                   @tweakch
+
+# --- Delivery / CI configuration ---
+/.github/                   @tweakch
