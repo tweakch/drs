@@ -2,7 +2,7 @@
 id: DRS-0008
 slice: landing-replay
 type: canvas
-status: approved
+status: implemented
 created: 2026-06-30
 updated: 2026-06-30
 source_story: ../stories/DRS-0008-landing-replay.story.md
@@ -83,3 +83,8 @@ and DB-free (no `auth()`); embedded race is public sample data. Replay is read-o
 
 - 2026-06-30 — created; data source = embedded real race (DB seam for later); public
   landing + sign-in CTA. Approved.
+- 2026-06-30 — **implemented** via `spdd-generate` (delegated); gates green with no env
+  (lint/typecheck/test [33 tests]/build); `/` static. Notes: ported the full `REAL_RACE`
+  (15 karts) — lap data stored as compact strings parsed once to dodge the TS build-worker
+  stack limit on a large array literal; `positionAt()` pure + unit-tested; single RAF loop;
+  `prefers-reduced-motion` → static frame.
