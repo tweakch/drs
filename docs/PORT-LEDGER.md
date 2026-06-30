@@ -52,12 +52,12 @@ _Updated each wave. See `prompts/canvas/` for the REASONS Canvas behind each vie
 
 ### Driver (6)
 
-- ⬜ V1 — driver leaderboard table
-- ⬜ V2 — kart-adjusted pace column
-- ⬜ V3 — kart-Δ (luck) column
-- ⬜ V4 — model-quality banner (R²)
-- ⬜ V5 — tier classification
-- ⬜ V6 — lineup recommendations
+- ✅ V1 — driver leaderboard table
+- ✅ V2 — kart-adjusted pace column
+- ✅ V3 — kart-Δ (luck) column
+- ✅ V4 — model-quality banner (R²)
+- ✅ V5 — tier classification
+- ✅ V6 — lineup recommendations
 
 ### Kart (4)
 
@@ -105,4 +105,4 @@ _Updated each wave. See `prompts/canvas/` for the REASONS Canvas behind each vie
 
 ## Tally
 
-- Landed: **28 / 60** (47 %)
+- Landed: **34 / 60** (57 %)
