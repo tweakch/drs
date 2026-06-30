@@ -66,3 +66,42 @@ prototype for the same input (guarded by the golden-master snapshot — see
 - Stay within Vercel serverless function limits (memory/time); long jobs must be
   chunked or moved off the request path.
 - No Node-only APIs in Edge runtime code paths unless the runtime is pinned to Node.
+
+## Authentication & authorization (non-negotiable)
+
+Introduced in DRS-0003. These hold in every slice that touches user data.
+
+- **Server-side enforcement, always.** Authentication and authorization are checked on
+  the server for every Route Handler, Server Action, and data-loading RSC. Client-side
+  checks are cosmetic only. An unauthenticated request to a protected resource gets no
+  data.
+- **Never trust client-supplied identity or scope.** Role, userId, eventId, teamId, and
+  driverId used for access decisions come from the **server session / `Membership`**, not
+  from request bodies, params, or headers.
+- **Deny by default.** No matching rule → denied. Prefer **404 over 403** for
+  cross-tenant resources so existence isn't leaked.
+- **Least privilege & hierarchy.** A user can only grant/manage roles **below** their
+  own tier and **within** their scope. No privilege escalation paths (e.g. a Team cannot
+  mint a Director; a Director cannot touch another Director's event).
+- **Sessions:** DB-backed (Auth.js + Neon), httpOnly + Secure + SameSite cookies, sensible
+  expiry/rotation, server-side revocation on removal. No password storage (magic link).
+- **Invitation tokens:** single-use, time-limited, **hashed at rest**, bound to email +
+  role + scope; revocable. Issuer must out-rank the granted role.
+- **No secrets client-side.** `AUTH_SECRET` and provider/email creds are server-only env
+  vars (see `.env.example`); never `NEXT_PUBLIC_*`.
+- **Audit trail** for access-control changes (invite, accept, role change, removal):
+  actor, target, scope, timestamp. No tokens or magic-link URLs in logs.
+
+## Multi-tenant data isolation (event-scoped)
+
+- **Every domain query is scoped.** Reads and writes to races/teams/laps/stints and
+  derived analysis are filtered by the caller's resolved event (and team, where the role
+  is Team/Driver) **in the query** — not fetched broadly and filtered in app code.
+- **A tenant sees only its own data.** A Team sees its own team's data within an event
+  (plus published, intentionally-public results); a Driver sees their own; a Director sees
+  their own events; only Admin is cross-tenant.
+- **The canonical-race immutability rule still holds** and is now also an authz boundary:
+  only a Director (owner) may ingest/replace the official race for their event; what-if
+  remains derived and per-session.
+- **IDs are not capabilities.** Knowing a uuid grants nothing; access always requires a
+  matching `Membership`.
