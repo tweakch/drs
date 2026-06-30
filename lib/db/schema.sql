@@ -180,3 +180,74 @@ create unique index if not exists races_source_ref_uq on races (source_ref);
 create unique index if not exists teams_source_ref_uq on teams (source_ref);
 -- Laps upsert on (team_id, idx); complements the existing non-unique lookup index.
 create unique index if not exists laps_team_idx_uq on laps (team_id, idx);
+
+-- ---------------------------------------------------------------------------
+-- Entity foundation (DRS-0018). First-class world-layer entities: the Swiss kart
+-- track registry, the season calendar, persistent team identities, and driver
+-- profiles with self-chosen visibility (Named / Alias / Mystery + per-field).
+-- ALL additive and idempotent — `pnpm migrate` stays a no-op on re-run.
+-- ---------------------------------------------------------------------------
+
+-- Extend the existing `tracks` table (DRS-0009) with registry attributes (TRACKS.md).
+alter table tracks add column if not exists slug            text unique;
+alter table tracks add column if not exists canton          text;
+alter table tracks add column if not exists canton_code     text;
+alter table tracks add column if not exists type            text; -- indoor | outdoor | both
+alter table tracks add column if not exists turns           integer;
+alter table tracks add column if not exists karts           text;
+alter table tracks add column if not exists ass_homologated boolean not null default false;
+alter table tracks add column if not exists opened          integer;
+alter table tracks add column if not exists status          text not null default 'operating';
+alter table tracks add column if not exists website         text;
+alter table tracks add column if not exists shape           text not null default 'none'; -- traced | external | none
+
+-- The season calendar (EVENTS.md). Each round may link to a `races` dataset once
+-- timing has been ingested (race_id null until then).
+create table if not exists calendar_events (
+  id             uuid primary key default gen_random_uuid(),
+  slug           text unique,
+  name           text not null,
+  track_id       uuid references tracks (id),
+  date           date,
+  format         text,
+  entry          text, -- open | licensed
+  spectator_open boolean,
+  race_id        uuid references races (id),
+  created_at     timestamptz not null default now()
+);
+
+-- Persistent team identity (across races): brand colour, website, socials, home track.
+create table if not exists team_profiles (
+  id            uuid primary key default gen_random_uuid(),
+  slug          text unique,
+  name          text not null,
+  color         text not null,
+  website       text,
+  socials       jsonb,
+  home_track_id uuid references tracks (id),
+  logo_url      text,
+  created_at    timestamptz not null default now()
+);
+
+-- Driver profile — identity is self-chosen. `display_mode` is Named | Alias | Mystery;
+-- `visibility` gates individual fields. The app renders drivers via the identity
+-- resolver (lib/entities/identity), so the choice is honoured everywhere.
+create table if not exists driver_profiles (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid references users (id) on delete set null,
+  display_mode text not null default 'alias',
+  full_name    text,
+  alias        text,
+  abbreviation text,
+  number       integer,
+  nationality  text,
+  avatar_url   text,
+  socials      jsonb,
+  visibility   jsonb not null default
+    '{"nationality":true,"socials":true,"kartHistory":true,"team":true}'::jsonb,
+  created_at   timestamptz not null default now()
+);
+
+-- Link the per-race `teams` rows to the persistent identities (additive, nullable).
+alter table teams add column if not exists team_profile_id   uuid references team_profiles (id);
+alter table teams add column if not exists driver_profile_id uuid references driver_profiles (id);
