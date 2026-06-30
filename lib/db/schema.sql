@@ -119,3 +119,62 @@ create table if not exists invitations (
 );
 
 create index if not exists invitations_status_idx on invitations (status);
+
+-- ---------------------------------------------------------------------------
+-- F1 ingestion seeds (DRS-0009). First-class tracks / constructors / drivers so
+-- real F1 races (fetched from Jolpica/Ergast) can seed the prod DB as realistic
+-- sample data. All ADDITIVE and idempotent: `pnpm migrate` is a no-op on re-run
+-- and existing kart-domain tables/rows are untouched. F1 cars map onto the
+-- race->team->lap model: one `race` per Grand Prix, one `team` row per car (the
+-- lap-sequence owner) tagged with its driver + constructor.
+-- ---------------------------------------------------------------------------
+
+-- A circuit. `ref` is the Ergast circuitId (natural key for idempotent upserts).
+-- `layout` holds the SVG replay path; F1 circuits reuse the Wohlen layout as a
+-- stand-in (Jolpica has no geometry) so the Replay view still animates.
+create table if not exists tracks (
+  id        uuid primary key default gen_random_uuid(),
+  ref       text unique,
+  name      text not null,
+  length_m  integer,
+  country   text,
+  locality  text,
+  layout    jsonb
+);
+
+-- An F1 constructor (the sport's "team"). `ref` = Ergast constructorId.
+create table if not exists constructors (
+  id          uuid primary key default gen_random_uuid(),
+  ref         text unique,
+  name        text not null,
+  nationality text
+);
+
+-- An F1 driver catalogue entry. `ref` = Ergast driverId.
+create table if not exists drivers (
+  id               uuid primary key default gen_random_uuid(),
+  ref              text unique,
+  code             text,
+  given_name       text,
+  family_name      text,
+  nationality      text,
+  permanent_number integer
+);
+
+-- Additive columns linking the existing race domain to the new entities and
+-- carrying the natural keys that make seeding idempotent.
+alter table races add column if not exists track_id   uuid references tracks (id);
+alter table races add column if not exists season     integer;
+alter table races add column if not exists round      integer;
+alter table races add column if not exists source_ref text;
+
+alter table teams add column if not exists driver_id      uuid references drivers (id);
+alter table teams add column if not exists constructor_id uuid references constructors (id);
+alter table teams add column if not exists source_ref     text;
+
+-- Natural-key uniqueness for `on conflict` upserts (partial: only seeded rows
+-- carry a source_ref, so hand-entered kart races are unaffected).
+create unique index if not exists races_source_ref_uq on races (source_ref) where source_ref is not null;
+create unique index if not exists teams_source_ref_uq on teams (source_ref) where source_ref is not null;
+-- Laps upsert on (team_id, idx); complements the existing non-unique lookup index.
+create unique index if not exists laps_team_idx_uq on laps (team_id, idx);
