@@ -61,10 +61,10 @@ _Updated each wave. See `prompts/canvas/` for the REASONS Canvas behind each vie
 
 ### Kart (4)
 
-- ⬜ K1 — kart pace ratings table
-- ⬜ K2 — pace-effect vs fastest bars
-- ⬜ K3 — usage stats (stints / drivers)
-- ⬜ K4 — empty-state gating
+- ✅ K1 — kart pace ratings table
+- ✅ K2 — pace-effect vs fastest bars
+- ✅ K3 — usage stats (stints / drivers)
+- ✅ K4 — empty-state gating
 
 ### Detektiv (6)
 
@@ -105,4 +105,4 @@ _Updated each wave. See `prompts/canvas/` for the REASONS Canvas behind each vie
 
 ## Tally
 
-- Landed: **34 / 60** (57 %)
+- Landed: **38 / 60** (63 %) — Wave 2 complete (Team + Driver + Kart)
