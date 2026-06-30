@@ -1,0 +1,34 @@
+@import 'tailwindcss';
+
+/*
+  Design tokens ported from the prototype (wohlen-race-analysis.html :root).
+  Tailwind v4 is CSS-first: every token below is emitted as a CSS variable AND a
+  utility — e.g. `--color-hot` powers `bg-hot` / `text-hot` / `border-hot`.
+*/
+@theme {
+  --color-asphalt: #16181d;
+  --color-asphalt-2: #1d2026;
+  --color-line: #2b2f38;
+  --color-paint: #f4f4f1;
+  --color-muted: #8a909c;
+  --color-dim: #5c6270;
+  --color-hot: #ff5a3c; /* fast / personal best */
+  --color-cool: #3ea7ff; /* reference */
+  --color-warn: #ffc23c; /* degradation */
+  --color-good: #3ddc91; /* consistency */
+  --color-kerb: #e23b3b;
+
+  --font-sans: 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* The racing-paper asphalt backdrop from the prototype. */
+body {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 38px, rgba(255, 255, 255, 0.012) 38px 40px),
+    var(--color-asphalt);
+  color: var(--color-paint);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.45;
+}

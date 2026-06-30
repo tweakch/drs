@@ -2,7 +2,7 @@
 id: DRS-0002
 slice: app-scaffold
 type: canvas
-status: approved
+status: implemented
 created: 2026-06-30
 updated: 2026-06-30
 source_story: ../stories/DRS-0002-app-scaffold.story.md
@@ -221,7 +221,8 @@ CI workflow, and root `package.json`. Env vars (`DATABASE_URL`, `DATABASE_URL_UN
 Inherits [`../shared/norms.md`](../shared/norms.md). Slice-specific:
 
 - Realises the `norms.md` project structure (`app/`, `lib/`, `types/`, `components/`).
-- Target versions: **Next.js 15** (App Router) + **React 19**, **Tailwind CSS v4**.
+- Target versions: **Next.js 16** (App Router) + **React 19**, **Tailwind CSS v4**
+  (current majors at generate time; canvas review had guessed Next 15).
 - Tailwind config is **CSS-first** (`@theme` in `globals.css`); do **not** add a
   `tailwind.config.ts`.
 - ESLint and Prettier must not overlap: `eslint-config-prettier` last in the flat config;
@@ -259,3 +260,15 @@ Inherits [`../shared/safeguards.md`](../shared/safeguards.md). Slice-specific:
   acceptance to a post-merge operator check. Status remains `draft`.
 - 2026-06-30 — **approved** at the human review gate (post prompt-update); ready for
   `spdd-generate`.
+- 2026-06-30 — **implemented** via `spdd-generate`. All 8 Operations built; verified
+  locally with **no DB/Blob env**: `format:check`, `lint`, `typecheck`, `test` (6/6),
+  and `next build` (12 routes prerendered) all green; placeholder scripts replaced.
+  Generate-time deviations from the canvas (current ecosystem reality):
+  - **Next 16 / React 19 / TS 6 / Zod 4** are the current majors (canvas guessed Next 15).
+  - **ESLint pinned to 9** — `eslint-plugin-react` (via `eslint-config-next`) is
+    incompatible with ESLint 10; `eslint-config-next` 16 ships **native flat configs**
+    so `@eslint/eslintrc`/`FlatCompat` was dropped.
+  - `pnpm-workspace.yaml` records `allowBuilds` (sharp, unrs-resolver) and the pnpm
+    minimum-release-age excludes the install required.
+  - `typecheck` hardened to `next typegen && tsc --noEmit` (typed routes).
+    Deferred to operator: first Vercel **preview** deploy (needs the linked project).
