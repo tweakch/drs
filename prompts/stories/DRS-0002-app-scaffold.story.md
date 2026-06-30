@@ -11,6 +11,7 @@ depends_on: DRS-0001-repo-foundation
 # DRS-0002 · Next.js application scaffold
 
 ## Story
+
 **As the** developers building DRS on the repository foundation from
 [DRS-0001](./DRS-0001-repo-foundation.story.md)
 **I want** the Next.js (App Router) + TypeScript + Tailwind application skeleton — design
@@ -20,6 +21,7 @@ analytics-engine boundary, and the env-gated Postgres + Blob data layer
 Vercel preview goes live.
 
 ## Context
+
 Split out of the original "foundation & scaffold" story; the repository/delivery
 platform is DRS-0001, **this** slice is the running application that sits on top of it.
 It also **fills the framework-coupled bodies** the foundation left as placeholders:
@@ -28,10 +30,11 @@ scripts, and runtime env validation.
 
 Source of truth for look & navigation: `../../wohlen-race-analysis.html` (design tokens
 in `:root` ~L9–17; header & tab nav ~L410–467; pure formatters `FMT`/`fmtDuration`
-~L475–486; engine functions ~L489–751). No feature view's *behaviour* is ported here —
+~L475–486; engine functions ~L489–751). No feature view's _behaviour_ is ported here —
 only the shell and the module boundaries.
 
 ## Acceptance criteria
+
 - [ ] Next.js App Router + TypeScript (strict) app; `pnpm dev` serves locally.
 - [ ] ESLint (next/core-web-vitals) + `tsconfig` + Vitest wired; the DRS-0001 CI
       placeholder scripts (`lint`/`typecheck`/`test`) are **replaced** with real commands
@@ -53,6 +56,7 @@ only the shell and the module boundaries.
       the real app; shell renders on the preview URL.
 
 ## INVEST check
+
 - **Independent** — depends only on DRS-0001 (the platform); no feature slice needed.
 - **Negotiable** — engine stub depth, DB schema depth, how many `ui/` primitives.
 - **Valuable** — first deployable app; unblocks all feature views.
@@ -61,12 +65,14 @@ only the shell and the module boundaries.
 - **Testable** — builds/lints/types/tests pass; shell renders; preview deploys.
 
 ## Out of scope
+
 - Porting any feature view's logic/UI (Data, Director, Product, Race, Team, Driver,
   Kart, Detektiv, Replay) — each is its own later slice.
 - Implementing the analytics engine bodies (a dedicated golden-master slice).
 - Persisting driver/kart tags or virtual-mode state; auth; sharing; exports.
 
 ## Open questions (resolve at clarify gate)
+
 - Tokens as CSS variables + Tailwind theme (both), or Tailwind theme only?
 - Chart lib now (`chart.js` + `react-chartjs-2`) or defer to the first charting view?
 - Typed SQL (`@vercel/postgres`) vs. adding an ORM (e.g. Drizzle) — analysis leaned

@@ -69,7 +69,7 @@ types/          shared TypeScript types (mirror shared/entities.md)
 
 - **Vitest** for unit tests. The `lib/analytics/` engine must have high coverage —
   it encodes the domain rules and is the regression net (SPDD: tests come last).
-- Test the *behaviour described in the Canvas Operations*, not implementation detail.
+- Test the _behaviour described in the Canvas Operations_, not implementation detail.
 - Golden-master: the official 28.06.2026 Wohlen race is a fixture; its parsed result
   and derived stats are snapshot-tested so refactors can't silently change numbers.
 

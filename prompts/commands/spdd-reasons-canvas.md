@@ -4,14 +4,17 @@
 code is generated from.
 
 ## When to run
+
 After analysis (step 3) is done.
 
 ## Inputs
+
 - The story and analysis for this slice.
 - The shared context: [`entities`](../shared/entities.md), [`norms`](../shared/norms.md),
   [`safeguards`](../shared/safeguards.md).
 
 ## Instructions to the agent
+
 Fill every part of [`../canvas/_TEMPLATE.reasons-canvas.md`](../canvas/_TEMPLATE.reasons-canvas.md):
 
 - **R — Requirements**: problem, in/out of scope, a checkable Definition of Done.
@@ -32,5 +35,6 @@ Write `../canvas/DRS-NNNN-YYYYMMDD-canvas-<slug>.md`, link the source story & an
 in the front-matter, set `status: draft`.
 
 ## Output
+
 A complete Canvas. Then stop — the **human review gate** comes next. Do not generate
 code until the Canvas is `approved`.

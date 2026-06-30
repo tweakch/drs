@@ -18,14 +18,14 @@ Reference: <https://martinfowler.com/articles/structured-prompt-driven/>
                                                   canvas                          Operations)
 ```
 
-| # | Step                       | Command (prompt)                            | Output                                  | Who          |
-|---|----------------------------|---------------------------------------------|-----------------------------------------|--------------|
-| 1 | Create/refine requirements | [`spdd-story`](./commands/spdd-story.md)     | `stories/<ID>-*.story.md`               | AI + human   |
-| 2 | Clarify & align            | — (review)                                   | edits to the story; scope locked        | **human**    |
-| 3 | Generate analysis context  | [`spdd-analysis`](./commands/spdd-analysis.md) | `analysis/<ID>-<date>-analysis-*.md`  | AI           |
-| 4 | Generate REASONS Canvas    | [`spdd-reasons-canvas`](./commands/spdd-reasons-canvas.md) | `canvas/<ID>-<date>-canvas-*.md` | AI + human   |
-| 5 | Generate code              | [`spdd-generate`](./commands/spdd-generate.md) | source code, task-by-task             | AI           |
-| 6 | Generate unit tests        | from Canvas Operations / [`spdd-api-test`](./commands/spdd-api-test.md) | tests | AI           |
+| #   | Step                       | Command (prompt)                                                        | Output                               | Who        |
+| --- | -------------------------- | ----------------------------------------------------------------------- | ------------------------------------ | ---------- |
+| 1   | Create/refine requirements | [`spdd-story`](./commands/spdd-story.md)                                | `stories/<ID>-*.story.md`            | AI + human |
+| 2   | Clarify & align            | — (review)                                                              | edits to the story; scope locked     | **human**  |
+| 3   | Generate analysis context  | [`spdd-analysis`](./commands/spdd-analysis.md)                          | `analysis/<ID>-<date>-analysis-*.md` | AI         |
+| 4   | Generate REASONS Canvas    | [`spdd-reasons-canvas`](./commands/spdd-reasons-canvas.md)              | `canvas/<ID>-<date>-canvas-*.md`     | AI + human |
+| 5   | Generate code              | [`spdd-generate`](./commands/spdd-generate.md)                          | source code, task-by-task            | AI         |
+| 6   | Generate unit tests        | from Canvas Operations / [`spdd-api-test`](./commands/spdd-api-test.md) | tests                                | AI         |
 
 **Running a step.** Each command in the table is a Claude Code slash command —
 `/spdd-story`, `/spdd-analysis`, `/spdd-reasons-canvas`, `/spdd-generate`,
@@ -46,10 +46,12 @@ regression net rather than a design tool.
 
 > **When reality diverges, fix the prompt first — then update the code.**
 
-Two directions, chosen by the *type* of change:
+Two directions, chosen by the _type_ of change:
 
 ### Logic correction — behaviour is wrong → **prompt first**
+
 Requirements or business rules change, or the generated behaviour is incorrect.
+
 1. Update the Canvas (and story if scope shifts) with
    [`spdd-prompt-update`](./commands/spdd-prompt-update.md).
 2. Regenerate the affected code from the updated Canvas.
@@ -59,7 +61,9 @@ requirement change ──▶ Canvas (prompt-update) ──▶ Code (re-generate)
 ```
 
 ### Refactor — structure improves, behaviour unchanged → **code first**
+
 Renames, extraction, perf tuning, dependency swaps.
+
 1. Change the code directly.
 2. Sync the Canvas back with [`spdd-sync`](./commands/spdd-sync.md) so the spec
    still describes reality.
@@ -68,7 +72,7 @@ Renames, extraction, perf tuning, dependency swaps.
 code refactor ──▶ Canvas (sync, Structure/Operations updated)
 ```
 
-If you can't tell which it is: does the *observable behaviour or contract* change?
+If you can't tell which it is: does the _observable behaviour or contract_ change?
 Yes → logic correction (prompt first). No → refactor (code first, then sync).
 
 ---

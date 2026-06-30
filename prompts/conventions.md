@@ -14,12 +14,12 @@ Based on the SPDD article's pattern `[STORY-ID]-[TIMESTAMP]-[Type]-[description]
 We use a **`YYYYMMDD`** date stamp (not a full timestamp) for readable, sortable,
 git-friendly filenames. If two artifacts of the same type share a date, append `-bN`.
 
-| Artifact | Pattern                                             | Example                                             |
-| -------- | --------------------------------------------------- | --------------------------------------------------- |
-| Story    | `stories/<ID>-<slug>.story.md`                      | `DRS-0002-data-ingest.story.md`                     |
-| Analysis | `analysis/<ID>-<YYYYMMDD>-analysis-<slug>.md`       | `DRS-0002-20260705-analysis-data-ingest.md`         |
-| Canvas   | `canvas/<ID>-<YYYYMMDD>-canvas-<slug>.md`           | `DRS-0002-20260705-canvas-data-ingest.md`           |
-| Test     | `tests/<ID>-<YYYYMMDD>-test-<slug>.md`              | `DRS-0002-20260705-test-data-ingest.md`             |
+| Artifact | Pattern                                       | Example                                     |
+| -------- | --------------------------------------------- | ------------------------------------------- |
+| Story    | `stories/<ID>-<slug>.story.md`                | `DRS-0002-data-ingest.story.md`             |
+| Analysis | `analysis/<ID>-<YYYYMMDD>-analysis-<slug>.md` | `DRS-0002-20260705-analysis-data-ingest.md` |
+| Canvas   | `canvas/<ID>-<YYYYMMDD>-canvas-<slug>.md`     | `DRS-0002-20260705-canvas-data-ingest.md`   |
+| Test     | `tests/<ID>-<YYYYMMDD>-test-<slug>.md`        | `DRS-0002-20260705-test-data-ingest.md`     |
 
 - `<slug>` is kebab-case, matches across the four artifacts of one slice.
 - Templates are prefixed `_TEMPLATE.` and ignored by tooling.
@@ -39,13 +39,13 @@ Every artifact starts with a YAML front-matter block:
 ---
 id: DRS-0001
 slice: repo-foundation
-type: canvas            # story | analysis | canvas | test
-status: draft           # draft | in-review | approved | implemented | synced
+type: canvas # story | analysis | canvas | test
+status: draft # draft | in-review | approved | implemented | synced
 created: 2026-06-30
 updated: 2026-06-30
 source_story: stories/DRS-0001-repo-foundation.story.md
-source_analysis: analysis/DRS-0001-20260630-analysis-repo-foundation.md  # canvas only
-source_canvas: canvas/DRS-0001-20260630-canvas-repo-foundation.md        # test only
+source_analysis: analysis/DRS-0001-20260630-analysis-repo-foundation.md # canvas only
+source_canvas: canvas/DRS-0001-20260630-canvas-repo-foundation.md # test only
 ---
 ```
 

@@ -7,6 +7,7 @@ observable behaviour unchanged — to bring the Canvas back in line with the cod
 > then synced so it still describes reality.
 
 ## When to run
+
 - Renames, file moves, extraction, dependency swaps, performance tuning.
 - Any change where the **contract/behaviour is the same** but the code shape differs.
 
@@ -14,10 +15,12 @@ Decision test: behaviour/contract unchanged → this. Behaviour changes → use
 [`spdd-prompt-update`](./spdd-prompt-update.md) instead.
 
 ## Inputs
+
 - The current code (the diff/refactor just made).
 - The slice's Canvas.
 
 ## Instructions to the agent
+
 1. Read the refactor. Identify what the Canvas now describes inaccurately — typically
    **S — Structure** (file paths, components, dependencies) and sometimes
    **O — Operations** wording.
@@ -30,5 +33,6 @@ Decision test: behaviour/contract unchanged → this. Behaviour changes → use
 5. Confirm tests still pass — behaviour must be unchanged.
 
 ## Output
+
 A Canvas that once again accurately describes the implemented code, with no behaviour
 drift.

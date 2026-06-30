@@ -1,0 +1,12 @@
+# Keep SPDD intent and reference material in git, out of the deployed bundle.
+prompts/
+docs/
+.claude/
+.husky/
+.github/
+
+# The original prototype is reference, not the shipped app.
+wohlen-race-analysis.html
+
+# Repo-level markdown (README, CONTRIBUTING, …) is not part of the app bundle.
+*.md

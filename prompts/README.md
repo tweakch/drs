@@ -26,14 +26,14 @@ for what-if scenarios.
 
 We are turning it into a **modern, production web app**:
 
-| Concern        | Decision                                              |
-| -------------- | ----------------------------------------------------- |
-| Framework      | Next.js (App Router) + TypeScript                     |
-| Styling        | Tailwind CSS (design tokens ported from the prototype)|
-| Hosting        | Vercel (first-class integration)                      |
-| Database       | Vercel Postgres (relational race/team/lap model)      |
-| Large payloads | Vercel Blob (raw timing dumps, exports)               |
-| Charts         | Chart.js (already used in the prototype)              |
+| Concern        | Decision                                               |
+| -------------- | ------------------------------------------------------ |
+| Framework      | Next.js (App Router) + TypeScript                      |
+| Styling        | Tailwind CSS (design tokens ported from the prototype) |
+| Hosting        | Vercel (first-class integration)                       |
+| Database       | Vercel Postgres (relational race/team/lap model)       |
+| Large payloads | Vercel Blob (raw timing dumps, exports)                |
+| Charts         | Chart.js (already used in the prototype)               |
 
 The foundation work is split into two deliberate slices: **DRS-0001 repository &
 delivery foundation** (git hygiene, tooling, commit gates, CI, governance/ADRs, Vercel
@@ -49,15 +49,18 @@ Every feature is specified as a **REASONS Canvas** before code is generated. Sev
 parts, grouped by purpose:
 
 **Intent & Design (abstract)**
+
 - **R — Requirements** — problem definition and definition of done
 - **E — Entities** — domain entities and their relationships
 - **A — Approach** — strategy for meeting the requirements
 - **S — Structure** — where changes fit; components and dependencies
 
 **Execution (specific)**
+
 - **O — Operations** — the approach broken into concrete, testable steps
 
 **Governance (common standards)**
+
 - **N — Norms** — cross-cutting engineering standards
 - **S — Safeguards** — non-negotiable boundaries (invariants, perf, security)
 

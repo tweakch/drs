@@ -1,0 +1,21 @@
+# Normalize line endings to LF on checkin for all text files; let Git decide
+# what is text. This makes the repo deterministic across Windows/macOS/Linux.
+* text=auto eol=lf
+
+# Lockfile is generated — collapse diffs and mark accordingly
+pnpm-lock.yaml linguist-generated=true -diff
+
+# Shell hooks must always be LF
+*.sh text eol=lf
+.husky/* text eol=lf
+
+# Binary assets (never normalize / diff)
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.woff  binary
+*.woff2 binary
+*.pdf  binary

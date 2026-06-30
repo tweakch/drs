@@ -1,7 +1,8 @@
 ---
-description: "SPDD step 4 — produce the executable REASONS Canvas (the build blueprint)."
-argument-hint: "<story/analysis id or slice slug, e.g. DRS-0001>"
+description: 'SPDD step 4 — produce the executable REASONS Canvas (the build blueprint).'
+argument-hint: '<story/analysis id or slice slug, e.g. DRS-0001>'
 ---
+
 You are running the **spdd-reasons-canvas** step of this repo's Structured-Prompt-Driven Development loop.
 
 Execute the canonical command specification exactly as written:
@@ -10,10 +11,11 @@ Execute the canonical command specification exactly as written:
 
 > **Path note:** `../`-relative links in that spec are relative to `prompts/commands/`
 > (e.g. `../shared/…` → `prompts/shared/…` from the repo root). Paths the spec tells you
-> to *write into* an artifact's front-matter (e.g. `source_story`/`source_analysis:
-> ../…`) stay relative to that artifact's own folder — leave those `../`.
+> to _write into_ an artifact's front-matter (e.g. `source_story`/`source_analysis:
+../…`) stay relative to that artifact's own folder — leave those `../`.
 
 Supporting context (read what the spec references):
+
 - Canvas template: @prompts/canvas/_TEMPLATE.reasons-canvas.md
 - Workflow & gates: @prompts/WORKFLOW.md
 - Naming / IDs / front-matter: @prompts/conventions.md

@@ -1,7 +1,8 @@
 ---
-description: "SPDD sync (code-first) — bring the Canvas back in line after a refactor."
-argument-hint: "<slice id whose code was refactored>"
+description: 'SPDD sync (code-first) — bring the Canvas back in line after a refactor.'
+argument-hint: '<slice id whose code was refactored>'
 ---
+
 You are running the **spdd-sync** step of this repo's Structured-Prompt-Driven Development loop.
 
 Execute the canonical command specification exactly as written:
@@ -10,10 +11,11 @@ Execute the canonical command specification exactly as written:
 
 > **Path note:** `../`-relative links in that spec are relative to `prompts/commands/`
 > (e.g. `../shared/…` → `prompts/shared/…` from the repo root). Paths the spec tells you
-> to *write into* an artifact's front-matter stay relative to that artifact's own
+> to _write into_ an artifact's front-matter stay relative to that artifact's own
 > folder — leave those `../`.
 
 Supporting context (read what the spec references):
+
 - Workflow & two-way sync rule: @prompts/WORKFLOW.md
 - Naming / changelog / front-matter: @prompts/conventions.md
 - Shared: `prompts/shared/entities.md`, `prompts/shared/norms.md`

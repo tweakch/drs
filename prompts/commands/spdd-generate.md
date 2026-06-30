@@ -3,13 +3,16 @@
 **Step 5 of the SPDD loop.** Generate code from an approved REASONS Canvas.
 
 ## When to run
+
 Only after the Canvas is reviewed and `status: approved`.
 
 ## Inputs
+
 - The approved Canvas `../canvas/DRS-NNNN-YYYYMMDD-canvas-<slug>.md`.
 - Shared norms & safeguards (the Canvas references them; obey both).
 
 ## Instructions to the agent
+
 1. Read the Canvas top-to-bottom. Treat **Operations** as the ordered build contract.
 2. Implement **task-by-task**, in order. For each Operation:
    - Write the code described in **Structure** at the specified paths.
@@ -26,5 +29,6 @@ Only after the Canvas is reviewed and `status: approved`.
    the code.
 
 ## Output
+
 Working code matching the Canvas, plus a short summary mapping each Operation to the
 files that fulfil it. Unit tests follow (step 6, derived from Canvas Operations).

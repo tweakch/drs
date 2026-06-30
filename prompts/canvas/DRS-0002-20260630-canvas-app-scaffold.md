@@ -29,6 +29,7 @@ Postgres + Blob data layer — plus the framework-coupled config that fills DRS-
 placeholder scripts, so feature slices have a home and the first real preview deploys.
 
 **In scope.**
+
 - Next.js (App Router) + TS (strict): `tsconfig`, `next.config`, Next ESLint, Vitest.
 - Extend the DRS-0001 `package.json` with app deps; **replace** the placeholder
   `lint`/`typecheck`/`test` scripts with real commands.
@@ -40,6 +41,7 @@ placeholder scripts, so feature slices have a home and the first real preview de
 - `lib/env.ts` zod validation of the DRS-0001 env contract.
 
 **Out of scope.**
+
 - Repo/Vercel/CI/governance **foundation** (DRS-0001).
 - Porting any feature view's logic/UI; implementing engine bodies; persisting tags;
   auth; sharing; exports. (Each a later slice.)
@@ -55,13 +57,14 @@ first Vercel preview deploys.
 
 ## A — Approach
 
-Stand up the Next.js app on the DRS-0001 platform, port the *look* and *navigation*
+Stand up the Next.js app on the DRS-0001 platform, port the _look_ and _navigation_
 faithfully, and establish the **module boundaries** the rest of the app depends on —
 especially the pure `lib/analytics/` isolation — while deferring all feature behaviour.
 
 Key decisions (from analysis):
+
 - **App Router** (per DRS-0001 ADR-0002).
-- **Tokens twice**: CSS variables in `globals.css` *and* mapped into the Tailwind theme.
+- **Tokens twice**: CSS variables in `globals.css` _and_ mapped into the Tailwind theme.
 - **Engine: signatures + types only**; the two pure formatters copied in full.
 - **DB: typed SQL** via `@vercel/postgres` + SQL migrations; no ORM yet.
 - **Nine views as a route group** under a shared layout that renders the tab nav.
@@ -161,51 +164,55 @@ CI workflow, and root `package.json`. Env vars (`POSTGRES_URL`/`POSTGRES_*`,
    Tailwind/PostCSS, Next ESLint, Vitest + React plugin. Extend the DRS-0001
    `package.json` with app deps and **replace** the placeholder `lint`/`typecheck`/`test`
    scripts with real commands (`eslint`, `tsc --noEmit`, `vitest run`).
-   - *Acceptance:* `pnpm dev` serves a page; `pnpm lint`, `pnpm typecheck`, `pnpm test`
+   - _Acceptance:_ `pnpm dev` serves a page; `pnpm lint`, `pnpm typecheck`, `pnpm test`
      run for real; the DRS-0001 "pending" echoes are gone.
 2. **Port design tokens.** Add the prototype's palette + fonts + racing-paper background
    to `globals.css` as CSS variables; map them in the Tailwind theme.
-   - *Acceptance:* `bg-asphalt`/`text-hot`/etc. resolve; body shows the dark racing-paper
+   - _Acceptance:_ `bg-asphalt`/`text-hot`/etc. resolve; body shows the dark racing-paper
      background; values match the prototype `:root` / `shared/entities.md`.
 3. **Build the app shell.** `(app)/layout.tsx` renders `Header` (eyebrow + title) and
    `TabNav` (nine views, active-route highlight); `(app)/page.tsx` redirects to `/data`.
-   - *Acceptance:* nav shows nine tabs; routing works; active tab highlighted; visual
+   - _Acceptance:_ nav shows nine tabs; routing works; active tab highlighted; visual
      parity with the prototype header/tabs.
 4. **Placeholder pages.** Each of the nine segments renders an `EmptyState`.
-   - *Acceptance:* all nine routes return 200 and render their placeholder.
+   - _Acceptance:_ all nine routes return 200 and render their placeholder.
 5. **Mirror domain types.** `types/index.ts` defines Race/Track/Team/Lap/Stint/Driver/
    Kart matching `shared/entities.md`.
-   - *Acceptance:* types compile; fields/enums match the entities doc.
+   - _Acceptance:_ types compile; fields/enums match the entities doc.
 6. **Analytics boundary.** `lib/analytics/`: `types.ts`, `format.ts` (port `FMT` &
    `fmtDuration` verbatim, pure), `engine.ts` (signatures for parse/cleanLaps/
    degradation/splitStints/classifyStints/estimateEffects/leaderboards/analyse that
    `throw new Error("not implemented")`), `index.ts` re-exports. **No React/DOM/Next
    imports** anywhere in this folder.
-   - *Acceptance:* `format.test.ts` passes (e.g. `FMT(62.8)==="1:02.800"`,
+   - _Acceptance:_ `format.test.ts` passes (e.g. `FMT(62.8)==="1:02.800"`,
      `FMT(53.4)==="53.400"`); importing `lib/analytics` pulls in no React.
 7. **Data layer (env-gated) + env validation.** `lib/db/schema.sql` (races/teams/laps
    DDL), `migrate.ts`, typed `client.ts`; `lib/blob/client.ts`; `lib/env.ts` validates
    the DRS-0001 env contract with zod. All read env lazily and fail with a clear error if
    unset; nothing in the UI imports them yet.
-   - *Acceptance:* build & CI pass with **no** DB env present; `pnpm migrate` applies
+   - _Acceptance:_ build & CI pass with **no** DB env present; `pnpm migrate` applies
      schema when env is set; missing/invalid env yields a clear `lib/env.ts` error.
 8. **CI real + first deploy.** Confirm CI (now running real lint/type/test) is green;
    ensure DRS-0001's `vercel.json` install/build resolve for the real app; verify the
    first Vercel **preview** deploy renders the shell.
-   - *Acceptance:* CI green on a clean checkout; preview deploys with only env vars set;
+   - _Acceptance:_ CI green on a clean checkout; preview deploys with only env vars set;
      shell renders on the preview URL; `main` promotes to production.
 
 ---
 
 ## N — Norms (deltas only)
+
 Inherits [`../shared/norms.md`](../shared/norms.md). Slice-specific:
+
 - Realises the `norms.md` project structure (`app/`, `lib/`, `types/`, `components/`).
 - `lib/analytics/engine.ts` stubs must still satisfy `strict` typing (typed signatures,
   bodies throw).
 - Keep `lib/analytics/` free of React/DOM/Next imports (the purity boundary).
 
 ## S — Safeguards (deltas only)
+
 Inherits [`../shared/safeguards.md`](../shared/safeguards.md). Slice-specific:
+
 - **Build must not require a live database or Blob.** DB/Blob access is env-gated; CI and
   `next build` pass with no credentials.
 - `lib/env.ts` must fail fast and clearly on missing/invalid env — never silently
@@ -216,6 +223,7 @@ Inherits [`../shared/safeguards.md`](../shared/safeguards.md). Slice-specific:
 ---
 
 ## Changelog
+
 - 2026-06-30 — repurposed from the original "foundation & scaffold" canvas after the
   split; foundation concerns removed (now DRS-0001). Scope = Next.js app scaffold only.
   Status `draft` — pending its own clarify + canvas-review gates.

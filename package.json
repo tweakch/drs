@@ -1,0 +1,32 @@
+{
+  "name": "drs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "DRS — kart-race After-Action Review. Repository & delivery foundation (DRS-0001); the Next.js application arrives in DRS-0002.",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "echo \"[DRS-0001] dev: pending DRS-0002 (Next.js app scaffold)\"",
+    "build": "echo \"[DRS-0001] build: pending DRS-0002 (Next.js app scaffold)\"",
+    "start": "echo \"[DRS-0001] start: pending DRS-0002 (Next.js app scaffold)\"",
+    "lint": "echo \"[DRS-0001] lint: pending DRS-0002 (ESLint / next lint)\"",
+    "typecheck": "echo \"[DRS-0001] typecheck: pending DRS-0002 (tsc --noEmit)\"",
+    "test": "echo \"[DRS-0001] test: pending DRS-0002 (Vitest)\"",
+    "format": "prettier --write \"**/*.{md,json,jsonc,yml,yaml,js,cjs,mjs,ts,tsx,jsx,css}\"",
+    "format:check": "prettier --check \"**/*.{md,json,jsonc,yml,yaml,js,cjs,mjs,ts,tsx,jsx,css}\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*": "prettier --write --ignore-unknown"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "husky": "^9.1.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.3.0"
+  }
+}
