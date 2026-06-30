@@ -19,6 +19,20 @@ const SEATS: Record<string, string[]> = {
 const KART_POOL = ['51', '52', '53', '54', '55', '56'];
 const MAX_STINTS = 8;
 
+/** A 4-team scenario with 3 spare box karts, for the Detektiv constraint solver.
+ * Teams start on karts 51–54; karts 55–57 wait in the box and rotate in at stops. */
+export function detektivScenario(): {
+  raw: RawLaps;
+  teamNos: Record<string, string>;
+  boxStart: string[];
+} {
+  const base = generateDemoRace(4, { laps: 48, rng: mulberry32(99) });
+  const names = Object.keys(base);
+  const teamNos: Record<string, string> = {};
+  names.forEach((name, i) => (teamNos[name] = String(51 + i)));
+  return { raw: base, teamNos, boxStart: ['55', '56', '57'] };
+}
+
 /** Synthetic race + per-stint driver/kart tags with rotation. Seeded → stable. */
 export function taggedDemoRace(): { raw: RawLaps; tags: Tags } {
   const base = generateDemoRace(TEAMS.length, { laps: 60, rng: mulberry32(2026) });
