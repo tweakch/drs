@@ -44,11 +44,11 @@ _Updated each wave. See `prompts/canvas/` for the REASONS Canvas behind each vie
 
 ### Team (5)
 
-- ⬜ T1 — stint cards per team
-- ⬜ T2 — Ace/Core/Backup tiers
-- ⬜ T3 — stint stats (best/median/σ/range/duration)
-- ⬜ T4 — editable driver/kart on a stint
-- ⬜ T5 — team-pool verdict tag
+- ✅ T1 — stint cards per team
+- ✅ T2 — Ace/Core/Backup tiers
+- ✅ T3 — stint stats (best/median/σ/range/duration)
+- ✅ T4 — editable driver/kart on a stint
+- ✅ T5 — team-pool verdict tag
 
 ### Driver (6)
 
@@ -105,4 +105,4 @@ _Updated each wave. See `prompts/canvas/` for the REASONS Canvas behind each vie
 
 ## Tally
 
-- Landed: **23 / 60** (38 %) — Wave 1 complete (engine + Data + Race)
+- Landed: **28 / 60** (47 %)
