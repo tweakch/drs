@@ -8,15 +8,22 @@ import type { Standing } from '@/lib/race/standings';
 // so a row and its kart marker read as the same car.
 const DOT = ['bg-hot', 'bg-cool', 'bg-good', 'bg-warn', 'bg-paint'];
 
-// The gap column: leader shows a flag, lapped cars show the lap deficit, everyone
-// else shows the interval to the car ahead (the tower's default read).
-function gapLabel(s: Standing): string {
+// The gap column. `mode` picks the read: 'ahead' = interval to the car in front
+// (the tower's default), 'leader' = gap back to P1. Lapped cars show the deficit.
+function gapLabel(s: Standing, mode: 'ahead' | 'leader'): string {
   if (s.position === 1) return 'Leader';
   if (s.lapped) return `+${Math.floor(s.lapsToLeader)} L`;
-  return `+${s.intervalSec.toFixed(1)}`;
+  const secs = mode === 'leader' ? s.gapToLeaderSec : s.intervalSec;
+  return `+${secs.toFixed(1)}`;
 }
 
-export function ReplayLeaderboard({ standings }: { standings: Standing[] }) {
+export function ReplayLeaderboard({
+  standings,
+  gapMode = 'ahead',
+}: {
+  standings: Standing[];
+  gapMode?: 'ahead' | 'leader';
+}) {
   const leader = standings[0];
   if (!leader) return null;
 
@@ -41,7 +48,7 @@ export function ReplayLeaderboard({ standings }: { standings: Standing[] }) {
             <span
               className={`font-mono tabular-nums ${s.position === 1 ? 'text-cool' : 'text-dim'}`}
             >
-              {gapLabel(s)}
+              {gapLabel(s, gapMode)}
             </span>
           </li>
         ))}

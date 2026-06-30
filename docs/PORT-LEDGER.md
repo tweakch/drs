@@ -80,10 +80,10 @@ _Updated each wave. See `prompts/canvas/` for the REASONS Canvas behind each vie
 - ✅ P1 — track SVG + kart markers _(landing/sign-in)_
 - ✅ P2 — live timing tower (pos/kart/lap/gap)
 - ✅ P3 — speed control (1–12×)
-- ⬜ P4 — label modes (team/driver/kart)
-- ⬜ P5 — gap modes (leader/ahead)
-- ⬜ P6 — play/pause
-- ⬜ P7 — seek slider
+- ✅ P4 — label modes (team/driver/kart)
+- ✅ P5 — gap modes (leader/ahead)
+- ✅ P6 — play/pause
+- ✅ P7 — seek slider
 - ⬜ P8 — apex markers
 - ⬜ P9 — racing line / pit-lane animation
 
@@ -105,4 +105,4 @@ _Updated each wave. See `prompts/canvas/` for the REASONS Canvas behind each vie
 
 ## Tally
 
-- Landed: **38 / 60** (63 %) — Wave 2 complete (Team + Driver + Kart)
+- Landed: **42 / 60** (70 %)
