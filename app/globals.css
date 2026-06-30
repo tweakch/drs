@@ -6,8 +6,11 @@
   utility — e.g. `--color-hot` powers `bg-hot` / `text-hot` / `border-hot`.
 */
 @theme {
+  /* Elevation — the pit wall has depth: a dark stage, lit panels, a raised panel. */
+  --color-stage: #0c0e12;
   --color-asphalt: #16181d;
   --color-asphalt-2: #1d2026;
+  --color-raised: #232730;
   --color-line: #2b2f38;
   --color-paint: #f4f4f1;
   --color-muted: #8a909c;
@@ -18,8 +21,13 @@
   --color-good: #3ddc91; /* consistency */
   --color-kerb: #e23b3b;
 
+  /* Broadcast timing semantics — read static data as if it were live timing. */
+  --color-sbest: #b07cff; /* session best (purple) */
+  --color-pbest: #3ddc91; /* personal best / improving (green) */
+
   --font-sans: 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'SF Mono', Menlo, Consolas, monospace;
+  --font-display: var(--font-saira), 'Saira Semi Condensed', system-ui, sans-serif;
+  --font-mono: var(--font-spline-mono), 'SF Mono', Menlo, Consolas, monospace;
 }
 
 /* The racing-paper asphalt backdrop from the prototype. */
