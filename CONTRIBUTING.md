@@ -7,9 +7,15 @@ before opening a PR.
 ## Dev setup
 
 ```bash
-nvm use            # Node 22 (.nvmrc)
-corepack enable    # activates the pinned pnpm
-pnpm install       # installs deps + Husky hooks (via "prepare")
+# Use Node 22 (pinned in .nvmrc). Pick the line for your version manager:
+#   nvm-sh (macOS/Linux):  nvm install && nvm use      # auto-reads .nvmrc
+#   nvm-windows:           nvm install 22 && nvm use 22 # does NOT read .nvmrc
+#   fnm:                   fnm use --install-on-empty   # auto-reads .nvmrc
+#   Volta:                 auto-detected; nothing to run
+node -v             # expect v22.x
+
+corepack enable     # activates the pinned pnpm (adds `pnpm` to PATH)
+pnpm install        # installs deps + Husky hooks (via "prepare")
 ```
 
 You're set up correctly when a `git commit` triggers lint-staged formatting and rejects

@@ -33,10 +33,14 @@ Architecture decisions are recorded in [`docs/adr/`](./docs/adr/).
 ## Getting started
 
 ```bash
-# 1. Use the pinned Node version
-nvm use                      # reads .nvmrc (Node 22)
+# 1. Use the pinned Node version (22, see .nvmrc). Pick your version manager:
+#    nvm-sh (macOS/Linux):  nvm install && nvm use       # auto-reads .nvmrc
+#    nvm-windows:           nvm install 22 && nvm use 22  # does NOT read .nvmrc
+#    fnm:                   fnm use --install-on-empty    # auto-reads .nvmrc
+#    Volta:                 auto-detected; nothing to run
+node -v                      # expect v22.x
 
-# 2. Activate the pinned pnpm via Corepack (no global install needed)
+# 2. Activate the pinned pnpm via Corepack (adds `pnpm` to PATH; needed for hooks)
 corepack enable
 
 # 3. Install dependencies (sets up Husky git hooks via the "prepare" script)
@@ -46,6 +50,10 @@ pnpm install
 pnpm format          # write
 pnpm format:check    # verify
 ```
+
+> **Note for nvm-windows users:** `nvm use` with no argument fails with _"A version
+> argument is required but missing"_ — only nvm-sh reads `.nvmrc`. Always pass the
+> version: `nvm use 22`.
 
 `lint`, `typecheck`, `test`, `dev`, `build`, and `start` are placeholders today and
 become real commands in DRS-0002.
