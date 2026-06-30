@@ -261,3 +261,54 @@ invites Driver (to their team). Accepting an invitation creates the `Membership`
 - A `Membership` with role `Driver` links a `User` to a domain **`Driver`** within a
   `Team`. The user-supplied driver/kart tags from the analysis engine become editable
   only by users whose scope covers that team.
+
+---
+
+## F1 ingestion entities (DRS-0009)
+
+Added when real F1 races were ingested (Jolpica/Ergast) as realistic **public sample
+data**. These promote `Track`/`Driver` to first-class tables and add `Constructor`, so an
+F1 Grand Prix can seed the relational model. F1 maps onto the kart model as: **one `Race`
+per Grand Prix**, **one `Team` row per car** (the lap-sequence owner, tagged with its
+driver + constructor), and that car's lap times as **`Lap`s**. There is no `Stint`/`Kart`
+decomposition for F1 (one driver per car → no driver×kart crossover). All columns are
+**additive and nullable**; hand-entered kart races are unaffected.
+
+### Track (now first-class)
+
+| Field    | Type   | Notes                                                              |
+| -------- | ------ | ------------------------------------------------------------------ |
+| ref      | string | Ergast `circuitId` — natural key for idempotent upserts            |
+| name     | string | "Red Bull Ring"                                                    |
+| length_m | int?   | from a static table (Ergast omits it); default when unknown        |
+| country  | string |                                                                    |
+| locality | string |                                                                    |
+| layout   | json   | SVG replay path; F1 circuits reuse the **Wohlen** path as stand-in |
+
+### Constructor
+
+| Field       | Type   | Notes                                            |
+| ----------- | ------ | ------------------------------------------------ |
+| ref         | string | Ergast `constructorId` (natural key)             |
+| name        | string | "Mercedes"                                       |
+| nationality | string |                                                  |
+| _(color)_   | string | livery colour assigned at seed time (static map) |
+
+### Driver (now a persisted catalogue entry)
+
+| Field            | Type   | Notes                           |
+| ---------------- | ------ | ------------------------------- |
+| ref              | string | Ergast `driverId` (natural key) |
+| code             | string | "RUS"                           |
+| given_name       | string |                                 |
+| family_name      | string |                                 |
+| nationality      | string |                                 |
+| permanent_number | int?   | car number                      |
+
+### Seed keys & links
+
+- `races.source_ref = f1:<season>:<round>`; `teams.source_ref = f1:<season>:<round>:<driverId>`;
+  laps upsert on `(team_id, idx)`. These natural keys make re-seeding idempotent.
+- `races.track_id → tracks`; `teams.driver_id → drivers`; `teams.constructor_id → constructors`.
+- Seeded races are **ownerless** (no `Event`/owner); a read seam filters on `source_ref`
+  so seeded sample data is never confused with event-scoped tenant races.

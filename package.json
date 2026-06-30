@@ -16,6 +16,9 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "migrate": "node --experimental-strip-types lib/db/migrate.ts",
+    "seed": "node --experimental-strip-types lib/db/seed.ts",
+    "seed:fetch": "node --experimental-strip-types lib/db/seeds/f1/fetch.ts",
+    "seed:build": "node --experimental-strip-types lib/db/seeds/f1/generate.ts",
     "format": "prettier --write \"**/*.{md,json,jsonc,yml,yaml,js,cjs,mjs,ts,tsx,jsx,css}\"",
     "format:check": "prettier --check \"**/*.{md,json,jsonc,yml,yaml,js,cjs,mjs,ts,tsx,jsx,css}\"",
     "prepare": "husky"

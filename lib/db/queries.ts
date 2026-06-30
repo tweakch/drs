@@ -262,3 +262,40 @@ export async function createMembership(args: {
     values (${args.userId}, ${args.eventId}, ${args.role}, ${args.teamId}, ${args.driverId})
   `;
 }
+
+// --- Seeded sample races (DRS-0009 F1 ingestion) ---------------------------
+
+export interface SeededRaceRow {
+  id: string;
+  name: string;
+  trackName: string;
+  trackLengthM: number;
+  date: string | null;
+  season: number | null;
+  round: number | null;
+  carCount: number;
+  lapCount: number;
+}
+
+/**
+ * Latest ownerless, seeded sample race. Filtered to rows carrying a `source_ref`
+ * (DRS-0009 F1 seeds) so it only ever returns public sample data — never an
+ * event-scoped (tenant) race. This is the DB-backed read seam the landing/replay
+ * path consumes once wired off the embedded sample.
+ */
+export async function getLatestSeededRace(): Promise<SeededRaceRow | null> {
+  const rows = await sql()`
+    select r.id, r.name, r.track_name as "trackName", r.track_length_m as "trackLengthM",
+           r.date, r.season, r.round,
+           count(distinct t.id)::int as "carCount",
+           count(l.id)::int as "lapCount"
+    from races r
+    left join teams t on t.race_id = r.id
+    left join laps l on l.team_id = t.id
+    where r.source_ref is not null
+    group by r.id
+    order by r.date desc nulls last, r.created_at desc
+    limit 1
+  `;
+  return (rows[0] as SeededRaceRow | undefined) ?? null;
+}
