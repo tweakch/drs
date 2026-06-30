@@ -29,18 +29,18 @@ _Updated each wave. See `prompts/canvas/` for the REASONS Canvas behind each vie
 
 ### Race (12)
 
-- ⬜ R1 — KPI: teams
-- ⬜ R2 — KPI: total laps
-- ⬜ R3 — KPI: field best (Δ vs track PB)
-- ⬜ R4 — KPI: avg CoV
-- ⬜ R5 — classification table
-- ⬜ R6 — column sorting
-- ⬜ R7 — gap-to-leader column
-- ⬜ R8 — pace-trace line chart
-- ⬜ R9 — chart legend toggle
-- ⬜ R10 — pace-vs-consistency scatter
-- ⬜ R11 — best-vs-median bars
-- ⬜ R12 — key-findings insights panel
+- ✅ R1 — KPI: teams
+- ✅ R2 — KPI: total laps
+- ✅ R3 — KPI: field best (Δ vs track PB)
+- ✅ R4 — KPI: avg CoV
+- ✅ R5 — classification table
+- ✅ R6 — column sorting
+- ✅ R7 — gap-to-leader column
+- ✅ R8 — pace-trace line chart
+- ✅ R9 — chart legend toggle
+- ✅ R10 — pace-vs-consistency scatter
+- ✅ R11 — best-vs-median bars
+- ✅ R12 — key-findings insights panel
 
 ### Team (5)
 
@@ -105,4 +105,4 @@ _Updated each wave. See `prompts/canvas/` for the REASONS Canvas behind each vie
 
 ## Tally
 
-- Landed: **3 / 60** (5 %)
+- Landed: **15 / 60** (25 %)
