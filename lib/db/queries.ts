@@ -4,6 +4,11 @@
 
 import { sql } from '@/lib/db/client';
 import type { Role, SessionMembership } from '@/lib/auth/types';
+import {
+  DEFAULT_VISIBILITY,
+  type DriverProfile,
+  type DriverVisibility,
+} from '@/lib/entities/types';
 
 // --- Row shapes ------------------------------------------------------------
 
@@ -213,6 +218,45 @@ export async function getUserById(userId: string): Promise<UserRow | null> {
 /** Update only the caller's own display name. */
 export async function updateDisplayName(userId: string, name: string): Promise<void> {
   await sql()`update users set name = ${name} where id = ${userId}`;
+}
+
+/** The caller's self-chosen race identity (Named / Alias / Mystery + visibility). */
+export async function getDriverProfile(userId: string): Promise<DriverProfile | null> {
+  const rows = await sql()`
+    select id, user_id as "userId", display_mode as "displayMode", full_name as "fullName",
+           alias, abbreviation, number, nationality, avatar_url as "avatarUrl", socials, visibility
+    from driver_profiles where user_id = ${userId}
+  `;
+  const r = rows[0] as
+    (Omit<DriverProfile, 'visibility'> & { visibility: DriverVisibility | null }) | undefined;
+  if (!r) return null;
+  return {
+    ...r,
+    fullName: r.fullName ?? undefined,
+    alias: r.alias ?? undefined,
+    abbreviation: r.abbreviation ?? undefined,
+    number: r.number ?? undefined,
+    nationality: r.nationality ?? undefined,
+    avatarUrl: r.avatarUrl ?? undefined,
+    socials: r.socials ?? undefined,
+    visibility: r.visibility ?? DEFAULT_VISIBILITY,
+  };
+}
+
+/** Upsert the caller's own identity (one profile per user). */
+export async function upsertDriverProfile(userId: string, p: DriverProfile): Promise<void> {
+  await sql()`
+    insert into driver_profiles
+      (user_id, display_mode, full_name, alias, abbreviation, number, nationality, avatar_url, socials, visibility)
+    values
+      (${userId}, ${p.displayMode}, ${p.fullName ?? null}, ${p.alias ?? null}, ${p.abbreviation ?? null},
+       ${p.number ?? null}, ${p.nationality ?? null}, ${p.avatarUrl ?? null},
+       ${JSON.stringify(p.socials ?? null)}::jsonb, ${JSON.stringify(p.visibility)}::jsonb)
+    on conflict (user_id) do update set
+      display_mode = excluded.display_mode, full_name = excluded.full_name, alias = excluded.alias,
+      abbreviation = excluded.abbreviation, number = excluded.number, nationality = excluded.nationality,
+      avatar_url = excluded.avatar_url, socials = excluded.socials, visibility = excluded.visibility
+  `;
 }
 
 // --- Invitations -----------------------------------------------------------
