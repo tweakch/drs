@@ -5,6 +5,7 @@ import { ClassificationTable } from '@/components/race/ClassificationTable';
 import { Insights } from '@/components/race/Insights';
 import { PaceConsistency } from '@/components/race/PaceConsistency';
 import { PaceTrace } from '@/components/race/PaceTrace';
+import { PositionChart } from '@/components/race/PositionChart';
 import { PitWallHeader } from '@/components/race/PitWallHeader';
 import { getLatestRace } from '@/lib/race/latest';
 import { WOHLEN } from '@/lib/race/track-meta';
@@ -61,6 +62,7 @@ export default function RaceView() {
         </section>
         <PaceTrace data={data} />
         <PaceConsistency data={data} />
+        <PositionChart data={data} />
         <Insights insights={insights} />
       </div>
     </div>
