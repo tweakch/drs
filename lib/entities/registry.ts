@@ -16,6 +16,22 @@ const MAGADINO_PATH =
 const LYSS_PATH =
   'M 155.6 312.1 L 158.2 293.9 L 163.5 282.8 L 170.7 274.4 L 182.3 271.4 L 208 267.7 L 216.7 259.9 L 220.9 247.6 L 219 234.2 L 212.3 225.6 L 200.7 220.8 L 187.7 221.6 L 177.9 229.2 L 121.9 290.5 L 114.6 295.4 L 106.7 298.4 L 94.9 296.7 L 86.4 288.9 L 83 283.5 L 71.7 238.6 L 71.3 227.2 L 74.3 215.2 L 82.7 204.1 L 137.2 166.9 L 150.7 156.5 L 155.5 145.2 L 157.4 133.4 L 152.2 120.6 L 141.6 112 L 129.9 109.3 L 117.3 111.6 L 94.3 122.1 L 81.5 137.2 L 55.4 172.5 L 48.6 181.5 L 40.5 206.2 L 39.9 216.5 L 41.6 224.9 L 47.8 249.1 L 61.2 285.2 L 77.3 328.1 L 86.5 346.7 L 100.3 375.6 L 115.9 384 L 129.5 381.6 L 138.7 375.9 L 145.7 364.5 M 94.3 122.1 L 84.5 121.5 L 79 113.9 L 73.5 87.4 L 64.1 40.2 L 60 31 L 51.9 25.4 L 42.4 24 L 34.8 27 L 26.8 33.4 L 24 43.3 L 25.2 57.9 L 29 83 L 34.4 121.3 L 37.4 131.1 L 42.3 142.9 L 47.4 156.4 L 48.1 168.6 L 48.6 181.5';
 
+// Kartbahn Spreitenbach — traced from OSM raceway ways via `pnpm trace`. © OSM contributors (ODbL).
+const SPREITENBACH_PATH =
+  'M 314.9 160.9 L 124.8 349 L 74.6 298.3 L 67.5 291.1 L 24 247.2 L 213.7 59.5 L 262.5 108.8 L 296.6 142.8 L 314.9 160.9 M 296.6 142.8 L 313.3 133.1 L 330.2 128.6 L 346.3 129.2 L 363.1 127.5 L 380.6 119.7 L 384 106.8 L 379.7 96.2 L 367.1 84.7 L 348.2 77.4 L 331.8 80.3 L 315.4 81.4 L 306.7 75.1 L 303.8 63.2 L 307.3 52.5 L 309.5 33.3 L 303.2 25.4 L 293.9 24 L 285.6 27.5 L 280.8 36.9 L 280.2 45.3 L 281.4 54.6 L 282.1 64.9 L 283.9 76.1 L 282.9 84.8 L 278.7 93.5 L 262.5 108.8';
+
+// OutdoorKart Graubünden (Cazis) — traced from OSM raceway ways via `pnpm trace`. © OSM contributors (ODbL).
+const CAZIS_PATH =
+  'M 128.9 281.4 L 120.5 279.3 L 114.5 282.2 L 113.1 289 L 117.3 299.4 L 129.3 303.8 L 142 311 L 148.2 319.9 L 162.8 346.7 L 173.1 357.8 L 188.8 363.2 L 201.5 362 L 214.4 367.5 L 221.4 378.9 L 228.7 384 L 233.5 383.2 L 239.3 379.3 L 240.8 372.6 L 234.2 353.3 L 209.1 304.5 L 182.4 265.3 L 171.2 246.5 L 169.3 232.1 L 173.6 225 L 182.8 217.1 L 188.1 209.3 L 186.7 200.4 L 174.6 157.7 L 144.6 56.1 L 137.8 42.8 L 130.6 36.7 L 126 36.5 L 120.5 39.9 L 115 44.7 L 105.4 46 L 93.2 43.9 L 86.8 36.7 L 83.4 28.8 L 77.1 24 L 68.2 24.4 L 53.8 31.8 L 39.4 43.2 L 29.3 59.7 L 24 77.7 L 24.6 99.3 L 26.1 154.3 L 28.6 164.6 M 188.2 309.9 L 198.7 331.3 L 195.7 340.4 L 185.8 344.5 L 175.2 338.1 L 163.5 317.9';
+
+// Kartbahn Sulgen — traced from OSM raceway ways via `pnpm trace`. © OSM contributors (ODbL).
+const SULGEN_PATH =
+  'M 195.9 99 L 251.2 122.4 L 313.2 148.6 L 328.4 161 L 331.6 175.3 L 331.6 193.6 L 337.1 197.3 L 353.2 201.9 L 363.8 189.5 L 384 144 L 380.8 128.8 L 369.3 122.4 L 268.1 80.2 L 212.8 57.2 L 137.6 25.9 L 122.8 24 L 102.6 30 L 96.2 41.5 L 48.8 146.8 L 53 160.1 L 64.9 165.6 L 78.7 161 L 115 74.1 L 127 69.5 L 137.1 73.7 L 140.8 86.1 L 104.5 173.9 L 88.4 182.6 L 36.4 200.6 L 28.1 207.4 L 24 218.5 L 26.8 233.6 L 36.4 240.6 L 77.8 260.3 L 90.7 258.9 L 100.3 248.8 L 108.1 236.4 L 110.9 218 L 114.6 204.7 L 123.3 200.1 L 167.9 99.4 L 175.3 92.5 L 195.9 99';
+
+// Tempodrom Winterthur — traced from OSM raceway ways via `pnpm trace`. © OSM contributors (ODbL).
+const TEMPODROM_PATH =
+  'M 264.2 24 L 263.9 47.7 L 262.6 62.1 L 257.7 75.4 L 249.3 86.4 L 236.2 96.9 L 220 104.3 L 202.1 108.6 L 183.8 109.6 L 72.9 110.4 L 58 112.1 L 44 117.5 L 32.8 127.6 L 25.8 140.9 L 24 155.8 L 27.5 170.5 L 36 183 L 48.3 191.6 L 62.8 195.5 L 78.6 195.9 L 352.1 177.2 L 364.5 174.6 L 374.9 168.8 L 381.4 160.3 L 384 150.3 L 383.3 139.8 L 380.4 129.8 L 375.2 121.6 L 347.2 89.5 L 340.9 80.3 L 335 69.8 L 331.6 58.8 L 329.4 45.8 L 328.1 25.2';
+
 export const TRACKS: Track[] = [
   {
     slug: 'wohlen',
@@ -76,7 +92,9 @@ export const TRACKS: Track[] = [
     assHomologated: false,
     status: 'operating',
     website: 'https://spreitenbach.kart.ch/',
-    shape: 'external',
+    shape: 'traced',
+    layout: SPREITENBACH_PATH,
+    layoutViewBox: '0 0 408 373',
   },
   {
     slug: 'cinema8',
@@ -103,7 +121,9 @@ export const TRACKS: Track[] = [
     assHomologated: false,
     status: 'operating',
     website: 'https://winterthur.kart.ch/',
-    shape: 'none',
+    shape: 'traced',
+    layout: TEMPODROM_PATH,
+    layoutViewBox: '0 0 408 219.9',
   },
   {
     slug: 'kart-basel',
@@ -164,7 +184,9 @@ export const TRACKS: Track[] = [
     assHomologated: false,
     status: 'operating',
     website: 'https://kartbahn-sulgen.ch/',
-    shape: 'none',
+    shape: 'traced',
+    layout: SULGEN_PATH,
+    layoutViewBox: '0 0 408 284.3',
   },
   {
     slug: 'arbopark',
@@ -215,7 +237,9 @@ export const TRACKS: Track[] = [
     assHomologated: false,
     status: 'operating',
     website: 'https://outdoorkart.ch/',
-    shape: 'none',
+    shape: 'traced',
+    layout: CAZIS_PATH,
+    layoutViewBox: '0 0 264.8 408',
   },
   {
     slug: 'vuiteboeuf',
